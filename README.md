@@ -25,14 +25,17 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 │   ├── polindra.db        # SQLite — 2 tabel relasional (JOIN by id_pendaftar)
 │   └── queries.sql        # Kumpulan query analisis (tren, funnel, retensi)
 ├── notebooks/
-│   └── 01_analisis_pmb_polindra.ipynb   # EDA lengkap + insight bisnis
+│   ├── 01_analisis_pmb_polindra.ipynb        # EDA lengkap + insight bisnis
+│   └── 02_statistik_dan_model_dropout.ipynb  # uji hipotesis + regresi logistik
 ├── dashboard/
 │   └── app.py             # Dashboard interaktif Streamlit + Plotly
 ├── src/
 │   ├── generate_data.py   # Generator dataset sintetis (reproducible, seed=42)
 │   ├── db_setup.py        # Loader CSV → SQLite
 │   ├── run_sql_analysis.py# Eksekusi semua query.sql → export CSV per hasil
-│   └── make_notebook.py   # Builder notebook via nbformat
+│   ├── validate_data.py   # 17 data-quality checks (assertion pipeline)
+│   ├── make_notebook.py   # Builder notebook 01 via nbformat
+│   └── make_notebook2.py  # Builder notebook 02 via nbformat
 └── outputs/
     ├── figures/           # Grafik hasil analisis
     └── sql_results/       # Output CSV dari tiap query SQL
@@ -52,7 +55,8 @@ mengikuti Permendikbudristek 48/2022 — dengan kuota seleksi terpisah per
 jalur, serta demografi Ciayumajakuning (BPS).
 
 Dokumentasi:
-- 📖 [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — penjelasan tiap kolom & asumsi pemodelan
+- � [`docs/EXECUTIVE_REPORT.md`](docs/EXECUTIVE_REPORT.md) — laporan eksekutif: temuan → rekomendasi
+- �📖 [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — penjelasan tiap kolom & asumsi pemodelan
 - 🔗 [`docs/SUMBER_DATA.md`](docs/SUMBER_DATA.md) — semua sumber riil: polindra.ac.id, PDDikti, SNPMB, BPS, beserta angka peminat riil SNBT 2025 yang dipakai untuk kalibrasi
 
 ## Cara Menjalankan
@@ -66,6 +70,9 @@ python src/db_setup.py
 
 # (opsional) jalankan seluruh analisis SQL → outputs/sql_results/
 python src/run_sql_analysis.py
+
+# (opsional) validasi kualitas data — 17 checks
+python src/validate_data.py
 
 # jalankan dashboard
 streamlit run dashboard/app.py
@@ -93,7 +100,7 @@ notebooks/01_analisis_pmb_polindra.ipynb
 
 ## Tech Stack
 
-`Python` `pandas` `NumPy` `SQL (SQLite)` `Matplotlib/Seaborn` `Plotly` `Streamlit` `Jupyter`
+`Python` `pandas` `NumPy` `SQL (SQLite)` `SciPy` `statsmodels` `Matplotlib/Seaborn` `Plotly` `Streamlit` `Jupyter`
 
 ---
 *Dibuat untuk portofolio Data Analyst.*
