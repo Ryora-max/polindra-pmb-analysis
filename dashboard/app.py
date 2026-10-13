@@ -133,8 +133,14 @@ BASE_LAYOUT = dict(
 
 def polish(fig, **kw):
     fig.update_layout(**{**BASE_LAYOUT, **kw})
-    fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(gridcolor="#ECECF6", zeroline=False)
+    # automargin: sumbu otomatis melebar agar label panjang tidak terpotong
+    fig.update_xaxes(showgrid=False, zeroline=False, automargin=True)
+    fig.update_yaxes(gridcolor="#ECECF6", zeroline=False, automargin=True,
+                     title_standoff=10)
+    # label di ujung bar boleh melampaui area plot (tidak kepotong)
+    fig.update_traces(cliponaxis=False, selector=dict(type="bar"))
+    # seragamkan & sembunyikan label terlalu kecil (anti-tumpuk di pie)
+    fig.update_layout(uniformtext_minsize=9, uniformtext_mode="hide")
     return fig
 
 def insight_box(text, tone="blue"):
