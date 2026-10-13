@@ -2,10 +2,17 @@
 Dashboard Analisis PMB Politeknik Negeri Indramayu.
 Jalankan:  streamlit run dashboard/app.py
 """
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import statsmodels.api as sm
 import streamlit as st
+from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # ------------------------------------------------------------------ #
 #  Page config & theme                                                #
@@ -227,9 +234,9 @@ for col, (label, val, sub, grad) in zip(st.columns(5), kpis):
     </div>""", unsafe_allow_html=True)
 
 st.write("")
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
     ["📈 Tren & Funnel", "🏫 Program Studi", "🗺️ Demografi",
-     "📊 Akademik", "🔍 Eksplorasi Data"])
+     "📊 Akademik", "🔮 Prediktif & Segmen", "🔍 Eksplorasi Data"])
 
 # ------------------------------------------------------------------ #
 #  TAB 1 — Tren & funnel                                              #
@@ -442,6 +449,35 @@ with tab3:
         polish(fig, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
 
+    st.markdown(
+        '<div class="sec-pill" style="color:#06B6D4">🗺️ '
+        '<span style="color:#1E2235">Peta sebaran domisili</span></div>',
+        unsafe_allow_html=True)
+    KOORD = {
+        "Kab. Indramayu": (-6.335, 108.319), "Kab. Cirebon": (-6.850, 108.560),
+        "Kota Cirebon": (-6.730, 108.552), "Kab. Majalengka": (-6.830, 108.227),
+        "Kab. Kuningan": (-6.980, 108.483), "Kab. Subang": (-6.571, 107.759),
+        "Kab. Sumedang": (-6.851, 107.921), "Kab. Karawang": (-6.305, 107.300),
+        "Kota Bandung": (-6.914, 107.609), "Kab. Bandung": (-7.023, 107.529),
+        "Kota Bekasi": (-6.238, 106.992), "Kab. Bekasi": (-6.238, 107.148),
+        "DKI Jakarta": (-6.208, 106.845), "Kab. Brebes": (-6.873, 109.043),
+        "Kab. Tegal": (-6.879, 109.140),
+    }
+    km = mhs["asal_kota"].value_counts().reset_index()
+    km.columns = ["kota", "n"]
+    km = km[km["kota"].isin(KOORD)].copy()
+    km["lat"] = km["kota"].map(lambda k: KOORD[k][0])
+    km["lon"] = km["kota"].map(lambda k: KOORD[k][1])
+    fig = px.scatter_mapbox(km, lat="lat", lon="lon", size="n", color="n",
+                            hover_name="kota", size_max=38, zoom=7.2,
+                            center=dict(lat=-6.72, lon=108.28),
+                            mapbox_style="open-street-map",
+                            color_continuous_scale="Turbo",
+                            labels={"n": "Mahasiswa"})
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=430,
+                      coloraxis_showscale=False)
+    st.plotly_chart(fig, use_container_width=True)
+
     c4, c5 = st.columns(2, gap="large")
     with c4:
         sec("📋", "Konsentrasi domisili (tabel detail)", C_BLUE)
@@ -575,9 +611,135 @@ ini sengaja dimodelkan — di data riil, kekuatan hubungannya bisa beda.
                 "terkonsentrasi di angkatan muda → 2 tahun pertama periode kritis retensi.", "blue")
 
 # ------------------------------------------------------------------ #
-#  TAB 5 — Eksplorasi Data                                            #
+#  TAB 5 — Prediktif & Segmen                                         #
 # ------------------------------------------------------------------ #
 with tab5:
+    c1, c2 = st.columns(2, gap="large")
+
+    with c1:
+        sec("📈", "Proyeksi pendaftar 2026–2028", C_PURPLE)
+        tren_f = pend.groupby("tahun_daftar").size().reset_index(name="n")
+        X = sm.add_constant(tren_f["tahun_daftar"])
+        ols = sm.OLS(tren_f["n"], X).fit()
+        fut = pd.DataFrame({"tahun_daftar": [2026, 2027, 2028]})
+        pred = ols.get_prediction(sm.add_constant(fut)).summary_frame(alpha=0.1)
+        fut["pred"], fut["lo"], fut["hi"] = (pred["mean"].round(0).astype(int),
+                                           pred["obs_ci_lower"], pred["obs_ci_upper"])
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=tren_f["tahun_daftar"], y=tren_f["n"],
+                                 mode="lines+markers", name="Aktual",
+                                 line=dict(color=C_BLUE, width=3.5),
+                                 marker=dict(size=9)))
+        fig.add_trace(go.Scatter(
+            x=list(fut["tahun_daftar"]) + list(fut["tahun_daftar"])[::-1],
+            y=list(fut["hi"]) + list(fut["lo"])[::-1], fill="toself",
+            fillcolor="rgba(139,92,246,.15)", line=dict(width=0),
+            name="Interval 90%", hoverinfo="skip"))
+        fig.add_trace(go.Scatter(x=fut["tahun_daftar"], y=fut["pred"],
+                                 mode="lines+markers", name="Proyeksi",
+                                 line=dict(color=C_PURPLE, width=3, dash="dash"),
+                                 marker=dict(size=9, symbol="diamond")))
+        polish(fig, legend=dict(orientation="h", y=1.14),
+               yaxis_title="Pendaftar")
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Model: regresi linier OLS pada tren 2019–2025 (filter ikut aktif) "
+                   "— proyeksi berguna sebagai baseline, bukan kepastian.")
+
+        sec("🤖", "Faktor paling memprediksi dropout (Random Forest)", C_RED)
+        df_m = mhs_x.dropna(subset=["nilai_rapor"]).copy()
+        df_m["do"] = (df_m["status_mahasiswa"] == "Drop Out").astype(int)
+        # fitur yang tersedia di akhir semester 1 — skenario early-warning nyata
+        ip_smt1 = khs[khs["semester"] == 1].set_index("nim")["ip_semester"]
+        df_m["ip_semester_1"] = df_m["nim"].map(ip_smt1)
+        df_m = df_m.dropna(subset=["ip_semester_1"])
+        feats = pd.get_dummies(
+            df_m[["nilai_rapor", "ip_semester_1", "jenis_kelamin", "jenis_sekolah",
+                  "jurusan", "jalur_masuk", "beasiswa_kip"]], drop_first=True)
+        Xtr, Xte, ytr, yte = train_test_split(
+            feats, df_m["do"], test_size=0.3, random_state=7,
+            stratify=df_m["do"])
+        rf = RandomForestClassifier(n_estimators=200, max_depth=6,
+                                    random_state=7, n_jobs=-1)
+        rf.fit(Xtr, ytr)
+        auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
+        imp = (pd.Series(rf.feature_importances_, index=feats.columns)
+               .nlargest(10).sort_values().reset_index())
+        imp.columns = ["fitur", "penting"]
+        fig = px.bar(imp, x="penting", y="fitur", orientation="h",
+                     color="penting", color_continuous_scale="Sunset",
+                     text=imp["penting"].map("{:.2f}".format),
+                     labels={"fitur": "", "penting": "Feature importance"})
+        fig.update_traces(textposition="outside")
+        polish(fig, coloraxis_showscale=False)
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih hanya dari fitur "
+                   "yang tersedia di akhir semester 1 (skenario early-warning nyata). "
+                   "Semester-1 IP biasanya prediktor terkuat.")
+
+    with c2:
+        sec("🧩", "Segmentasi mahasiswa (K-Means, 4 persona)", C_TEAL)
+        seg = mhs_x.dropna(subset=["nilai_rapor"]).copy()
+        n_sem = khs_x.groupby("nim")["semester"].max()
+        seg["semester_tempuh"] = seg["nim"].map(n_sem)
+        Xs = StandardScaler().fit_transform(
+            seg[["nilai_rapor", "ipk", "semester_tempuh"]])
+        seg["cluster"] = KMeans(n_clusters=4, random_state=7,
+                                n_init=10).fit_predict(Xs)
+        cent = seg.groupby("cluster")[["nilai_rapor", "ipk"]].mean()
+        order = (cent["nilai_rapor"] + cent["ipk"] * 20).sort_values()
+        persona_map = {}
+        for rank, cid in enumerate(order.index):
+            persona_map[cid] = ["🟥 Berisiko / Butuh Bimbingan", "🟧 Rata-rata",
+                                "🟦 Stabil", "🟩 Bintang / Unggulan"][rank]
+        seg["persona"] = seg["cluster"].map(persona_map)
+
+        fig = px.scatter(seg.sample(min(2200, len(seg)), random_state=7),
+                         x="nilai_rapor", y="ipk", color="persona",
+                         opacity=0.55,
+                         color_discrete_map={"🟩 Bintang / Unggulan": C_GREEN,
+                                             "🟦 Stabil": C_BLUE,
+                                             "🟧 Rata-rata": C_AMBER,
+                                             "🟥 Berisiko / Butuh Bimbingan": C_RED},
+                         labels={"nilai_rapor": "Nilai rapor saat masuk",
+                                 "ipk": "IPK saat ini", "persona": ""})
+        polish(fig, legend=dict(orientation="h", y=1.16))
+        st.plotly_chart(fig, use_container_width=True)
+
+        prof = (seg.groupby("persona")
+                .agg(n=("nim", "count"), rapor=("nilai_rapor", "mean"),
+                     ipk=("ipk", "mean"),
+                     do_pct=("status_mahasiswa",
+                             lambda s: 100 * (s == "Drop Out").mean()))
+                .round(2).reset_index())
+        prof.columns = ["Persona", "Jumlah", "Rata rapor", "Rata IPK", "% DO"]
+        st.dataframe(prof, use_container_width=True, hide_index=True)
+
+    penjelasan("Cara membaca bagian ini", """
+**Forecast (OLS + interval 90%)** memproyeksikan tren historis ke depan.
+Interval lebar di tahun-tahun berikutnya = ketidakpastian tumbuh — wajar,
+model hanya "melanjutkan pola", tidak tahu kebijakan masa depan (prodi baru,
+kuota, dsb.). Dipakai sebagai *baseline* perencanaan daya tampung.
+
+**Random Forest feature importance** menjawab "faktor mana yang paling
+menentukan dropout?" — pelengkap regresi logistik (notebook 02): logistik
+lebih interpretable (odds ratio), RF menangkap pola non-linier. ROC-AUC
+mengukur kemampuan model membedakan DO vs bukan DO.
+
+**K-Means segmentation** mengelompokkan mahasiswa jadi 4 persona berdasarkan
+nilai rapor, IPK, dan semester tempuh — teknik yang sama dipakai untuk
+segmentasi customer/produk di industri. Persona bisa dipakai untuk program
+berbeda per segmen (beasiswa untuk "Bintang", mentoring untuk "Berisiko").
+""")
+
+    insight_box("Ini tab paling 'next level': <b>forecast → prediksi demand</b>, "
+                "<b>ML → siapa yang berisiko DO</b>, <b>clustering → segmen mahasiswa</b>. "
+                "Tiga skill ini yang membedakan 'analyst yang bikin chart' dari "
+                "'analyst yang bikin keputusan'.", "green")
+
+# ------------------------------------------------------------------ #
+#  TAB 6 — Eksplorasi Data                                            #
+# ------------------------------------------------------------------ #
+with tab6:
     sec("🔍", "Eksplorasi data interaktif", C_PURPLE)
     st.caption("Bangun tabel analisis sendiri: pilih tabel, dimensi, dan metrik.")
 
