@@ -46,8 +46,14 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 | `mahasiswa` | ~6.300 | subset yang registrasi: NIM, angkatan, prodi, IPK, status akademik |
 
 Mencakup 11 prodi riil Polindra (3 jurusan: Teknik Informatika, Teknik,
-Kesehatan), jalur masuk SNMPN/SBMPN/Mandiri/Prestasi dengan kuota seleksi
-terpisah, serta demografi Ciayumajakuning.
+Kesehatan), jalur masuk yang meniru kebijakan nyata — **SNMPN/SBMPN/Mandiri/
+Prestasi (2019–2023)** bertransisi ke **SNBP/SNBT/Mandiri (2024–2025)**
+mengikuti Permendikbudristek 48/2022 — dengan kuota seleksi terpisah per
+jalur, serta demografi Ciayumajakuning (BPS).
+
+Dokumentasi:
+- 📖 [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — penjelasan tiap kolom & asumsi pemodelan
+- 🔗 [`docs/SUMBER_DATA.md`](docs/SUMBER_DATA.md) — semua sumber riil: polindra.ac.id, PDDikti, SNPMB, BPS, beserta angka peminat riil SNBT 2025 yang dipakai untuk kalibrasi
 
 ## Cara Menjalankan
 

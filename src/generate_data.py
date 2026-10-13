@@ -16,26 +16,36 @@ rng = np.random.default_rng(42)
 # ---------------------------------------------------------------
 # Referensi prodi riil Polindra (polindra.ac.id) + tahun dibuka
 # (jenjang, jurusan, tahun_buka, daya_tampung_per_tahun, bobot_peminat)
+# Bobot peminat dikalibrasi ke angka riil peminat SNBT 2025
+# (Kep 556, TI 480, TM 327, SIKC 154, RPL 156, PM 147, TPTU 133,
+#  TRIK 106, TRK 76 — sumber: sidata SNPMB via min.co.id)
 # ---------------------------------------------------------------
 PRODI = {
     # Jurusan Teknik Informatika
-    "D3 Teknik Informatika":                    ("D3", "Teknik Informatika", 2015, 96, 1.00),
-    "S1T Rekayasa Perangkat Lunak":             ("S1T", "Teknik Informatika", 2016, 96, 0.95),
-    "S1T Sistem Informasi Kota Cerdas":         ("S1T", "Teknik Informatika", 2022, 48, 0.55),
-    "S1T Teknologi Rekayasa Komputer":          ("S1T", "Teknik Informatika", 2023, 48, 0.45),
+    "D3 Teknik Informatika":                    ("D3", "Teknik Informatika", 2015, 96, 0.86),
+    "S1T Rekayasa Perangkat Lunak":             ("S1T", "Teknik Informatika", 2016, 96, 0.28),
+    "S1T Sistem Informasi Kota Cerdas":         ("S1T", "Teknik Informatika", 2022, 48, 0.28),
+    "S1T Teknologi Rekayasa Komputer":          ("S1T", "Teknik Informatika", 2023, 48, 0.14),
     # Jurusan Teknik
-    "D3 Teknik Mesin":                          ("D3", "Teknik", 2015, 64, 0.60),
-    "D3 Teknik Pendingin & Tata Udara":         ("D3", "Teknik", 2015, 48, 0.45),
-    "S1T Perancangan Manufaktur":               ("S1T", "Teknik", 2016, 48, 0.35),
-    "S1T Teknologi Rekayasa Instrumen & Kontrol": ("S1T", "Teknik", 2022, 48, 0.30),
+    "D3 Teknik Mesin":                          ("D3", "Teknik", 2015, 64, 0.59),
+    "D3 Teknik Pendingin & Tata Udara":         ("D3", "Teknik", 2015, 48, 0.24),
+    "S1T Perancangan Manufaktur":               ("S1T", "Teknik", 2016, 48, 0.26),
+    "S1T Teknologi Rekayasa Instrumen & Kontrol": ("S1T", "Teknik", 2022, 48, 0.19),
     # Jurusan Kesehatan
-    "D3 Keperawatan":                           ("D3", "Kesehatan", 2016, 96, 0.85),
-    "S1T Teknologi Laboratorium Medis":         ("S1T", "Kesehatan", 2020, 48, 0.60),
-    "S1T Teknologi Rekayasa Elektro-Medis":     ("S1T", "Kesehatan", 2022, 32, 0.30),
+    "D3 Keperawatan":                           ("D3", "Kesehatan", 2016, 96, 1.00),
+    "S1T Teknologi Laboratorium Medis":         ("S1T", "Kesehatan", 2020, 48, 0.25),
+    "S1T Teknologi Rekayasa Elektro-Medis":     ("S1T", "Kesehatan", 2022, 32, 0.15),
 }
 
-JALUR = ["SNMPN", "SBMPN", "Mandiri", "Prestasi"]
-JALUR_P = [0.35, 0.35, 0.25, 0.05]  # proporsi jalur pendaftaran
+# Jalur seleksi mengikuti kebijakan nasional yang sebenarnya:
+# era 2019-2023: jalur khusus politeknik (SNMPN rapor + SBMPN ujian) — FDPNI
+# era 2024-2025: SNPMB (Permendikbudristek 48/2022) — SNBP rapor + SNBT UTBK
+JALUR_ERA_A = ["SNMPN", "SBMPN", "Mandiri", "Prestasi"]
+JALUR_PA = [0.35, 0.35, 0.25, 0.05]
+JALUR_ERA_B = ["SNBP", "SNBT", "Mandiri", "Prestasi"]
+JALUR_PB = [0.30, 0.42, 0.26, 0.02]
+JALUR_RAPOR = {"SNMPN", "SNBP", "Prestasi"}       # seleksi tanpa ujian tulis
+JALUR_UJIAN = {"SBMPN", "SNBT", "Mandiri"}        # seleksi berbasis tes
 
 # Asal domisili pendaftar — mayoritas Indramayu & Ciayumajakuning
 KOTA = ["Kab. Indramayu", "Kab. Cirebon", "Kota Cirebon", "Kab. Majalengka",
@@ -95,11 +105,13 @@ def buat_pendaftar() -> pd.DataFrame:
             jk = rng.choice(["L", "P"], p=GENDER_P[jurusan])
             sekolah = rng.choice(SEKOLAH, p=SEKOLAH_P[jurusan])
             nilai_rapor = np.clip(rng.normal(80, 5), 65, 98)
+            jalur_list, jalur_p = (JALUR_ERA_A, JALUR_PA) if tahun <= 2023 \
+                else (JALUR_ERA_B, JALUR_PB)
 
             rows.append({
                 "id_pendaftar": f"PMB{tahun}{pid:05d}",
                 "tahun_daftar": tahun,
-                "jalur_masuk": rng.choice(JALUR, p=JALUR_P),
+                "jalur_masuk": rng.choice(jalur_list, p=jalur_p),
                 "prodi_pilihan_1": p1,
                 "prodi_pilihan_2": p2,
                 "jurusan": jurusan,
@@ -112,9 +124,9 @@ def buat_pendaftar() -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
 
-    # Nilai ujian (untuk jalur SBMPN & Mandiri); SNMPN/Prestasi pakai rapor
+    # Nilai ujian hanya ada di jalur berbasis tes; jalur rapor pakai rapor
     df["nilai_ujian"] = np.where(
-        df["jalur_masuk"].isin(["SBMPN", "Mandiri"]),
+        df["jalur_masuk"].isin(JALUR_UJIAN),
         np.clip(rng.normal(65, 12, len(df)), 20, 100).round(1),
         np.nan,
     )
@@ -129,14 +141,17 @@ def buat_pendaftar() -> pd.DataFrame:
     df["skor_seleksi"] = skor.round(2)
 
     # ---- Seleksi per prodi x tahun x jalur: tiap jalur punya kuota sendiri ----
-    # (realistis: SNMPN/SBMPN/Mandiri adalah gelombang seleksi terpisah)
-    JALUR_KUOTA = {"SNMPN": 0.30, "SBMPN": 0.40, "Mandiri": 0.27, "Prestasi": 0.03}
+    # (realistis: tiap jalur adalah gelombang seleksi terpisah;
+    #  era SNPMB: SNBP >=20% & SNBT >=40% daya tampung per Permendikbudristek 48/2022)
+    KUOTA_ERA_A = {"SNMPN": 0.30, "SBMPN": 0.40, "Mandiri": 0.27, "Prestasi": 0.03}
+    KUOTA_ERA_B = {"SNBP": 0.20, "SNBT": 0.40, "Mandiri": 0.38, "Prestasi": 0.02}
 
     df["status_seleksi"] = "Tidak Lulus"
     df["prodi_diterima"] = pd.Series(pd.NA, index=df.index, dtype="object")
     for tahun in TAHUN:
+        kuota = KUOTA_ERA_A if tahun <= 2023 else KUOTA_ERA_B
         for prodi in prodi_tersedia(tahun):
-            for jalur, frac in JALUR_KUOTA.items():
+            for jalur, frac in kuota.items():
                 daya = round(PRODI[prodi][3] * 1.8 * frac)
                 mask = (
                     (df["tahun_daftar"] == tahun)
@@ -182,7 +197,7 @@ def buat_mahasiswa(df_pendaftar: pd.DataFrame) -> pd.DataFrame:
     base_mu = {"Teknik Informatika": 3.35, "Teknik": 3.15, "Kesehatan": 3.45}
     mu = (m["jurusan"].map(base_mu)
           + np.where(m["beasiswa_kip"] == "Ya", 0.08, 0.0)
-          + np.where(m["jalur_masuk"] == "SNMPN", 0.05, 0.0))
+          + np.where(m["jalur_masuk"].isin(["SNMPN", "SNBP"]), 0.05, 0.0))
     m["ipk"] = np.clip(rng.normal(mu, 0.35), 1.5, 4.0).round(2)
 
     # ---- Status mahasiswa ----

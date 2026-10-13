@@ -83,7 +83,7 @@ axes[1].set_title("10 prodi paling ketat (% diterima)")
 plt.tight_layout()
 plt.savefig("../outputs/figures/prodi_diminati_ketat.png", bbox_inches="tight"); plt.show()"""))
 
-cells.append(nbf.v4.new_markdown_cell("""**Insight:** Prodi Teknik Informatika & Kesehatan mendominasi peminat. Daya tampung yang sama tetapi peminat jauh lebih besar membuat persentase diterima di prodi populer jauh lebih rendah — calon mahasiswa perlu strategi memilih pilihan ke-2."""))
+cells.append(nbf.v4.new_markdown_cell("""**Insight:** D3 Keperawatan & D3 Teknik Informatika memimpin peminat — konsisten dengan data riil peminat SNBT 2025 Polindra (Kep 556, TI 480 pendaftar). Daya tampung yang sama tetapi peminat jauh lebih besar membuat persentase diterima di prodi populer jauh lebih rendah — calon mahasiswa perlu strategi memilih pilihan ke-2."""))
 
 cells.append(nbf.v4.new_markdown_cell("""## 4. Conversion Funnel per Jalur Masuk"""))
 
@@ -100,7 +100,9 @@ ax.set_title("% pendaftar yang akhirnya registrasi, per jalur")
 plt.savefig("../outputs/figures/funnel_jalur.png", bbox_inches="tight"); plt.show()
 funnel"""))
 
-cells.append(nbf.v4.new_markdown_cell("""**Insight:** SBMPN adalah sumber mahasiswa baru terbesar (kuota seleksi paling besar ~40%). Jalur Prestasi paling kompetitif — kuota kecil diperebutkan peminat rapor terbaik. Jalur Mandiri punya *leakage* daftar ulang tertinggi: ~22% peserta lulus tidak jadi registrasi (umumnya karena lolos juga di PTN lain atau kendala biaya) — peluang perbaikan *yield* lewat follow-up aktif."""))
+cells.append(nbf.v4.new_markdown_cell("""**Insight:** Jalur berbasis ujian tulis (SBMPN era ≤2023, SNBT era ≥2024) adalah sumber mahasiswa baru terbesar — kuota seleksi paling besar (~40% daya tampung, sesuai Permendikbudristek 48/2022). Jalur Prestasi paling kompetitif — kuota kecil diperebutkan peminat terbaik. Jalur Mandiri punya *leakage* daftar ulang tertinggi: ~22% peserta lulus tidak jadi registrasi (umumnya karena lolos juga di PTN lain atau kendala biaya) — peluang perbaikan *yield* lewat follow-up aktif.
+
+**Catatan metodologi:** dataset meniru transisi kebijakan seleksi nasional — jalur politeknik (SNMPN/SBMPN, FDPNI) berlaku ≤2023; sejak 2024 Polindra masuk sistem SNPMB (SNBP rapor + SNBT berbasis UTBK). Ini kenapa nama jalur berubah di pertengahan data."""))
 
 cells.append(nbf.v4.new_markdown_cell("""## 5. Profil Demografi Mahasiswa"""))
 
@@ -145,7 +147,7 @@ mahasiswa.groupby("jalur_masuk").agg(
     dropout_pct=("status_mahasiswa", lambda s: round(100*(s=="Drop Out").mean(),1))
 ).round(2)"""))
 
-cells.append(nbf.v4.new_markdown_cell("""**Insight:** Mahasiswa jalur SNMPN (seleksi rapor) mencatat rata-rata IPK tertinggi — sinyal bahwa nilai rapor adalah prediktor performa akademik yang baik, konsisten dengan literatur admission research. Dropout rate antar jalur relatif seragam (~6–7%), artinya jalur masuk lebih berpengaruh ke kualitas akademik daripada ke retensi."""))
+cells.append(nbf.v4.new_markdown_cell("""**Insight:** Mahasiswa jalur SNMPN (seleksi rapor era ≤2023) mencatat rata-rata IPK tertinggi — sinyal bahwa nilai rapor adalah prediktor performa akademik yang baik, konsisten dengan literatur admission research. Dropout rate antar jalur relatif seragam (~6–8%), artinya jalur masuk lebih berpengaruh ke kualitas akademik daripada ke retensi."""))
 
 cells.append(nbf.v4.new_markdown_cell("""## 7. Cohort Retention Analysis
 
@@ -182,7 +184,7 @@ cells.append(nbf.v4.new_markdown_cell("""## 8. Kesimpulan & Rekomendasi
 1. **Demand naik kuat** — pertahankan tren penambahan prodi; SIKC & prodi S1T baru cepat diminati.
 2. **Ketimpangan keketatan** — prodi TI & Kesehatan sangat kompetitif; pertimbangkan tambah daya tampung atau sosialisasi prodi teknik yang sepi.
 3. **Perbaiki yield jalur Mandiri** — leakage daftar ulang tinggi; follow-up aktif pendaftar lulus (reminder, skema cicilan UKT).
-4. **SNMPN = sumber mahasiswa berkualitas** — pertahankan/perbesar kuota jalur rapor.
+4. **Jalur rapor (SNMPN/SNBP) = sumber mahasiswa berkualitas** — pertahankan/perbesar kuota jalur rapor.
 5. **Perkuat brand di luar Ciayumajakuning** — mahasiswa luar Jawa masih minim; peluang diversifikasi.
 
 ---

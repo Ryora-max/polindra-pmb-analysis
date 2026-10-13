@@ -1,13 +1,13 @@
 jurusan,jenis_sekolah,jml_mahasiswa,dropout_pct
-Kesehatan,Lainnya,21,9.5
-Kesehatan,SMA,1165,7.8
-Kesehatan,MA,780,6.5
-Kesehatan,SMK,55,5.5
-Teknik,MA,76,9.2
-Teknik,SMA,405,6.9
-Teknik,SMK,1329,6.8
-Teknik,Lainnya,54,5.6
-Teknik Informatika,MA,113,11.5
-Teknik Informatika,Lainnya,51,7.8
-Teknik Informatika,SMK,1650,7.4
-Teknik Informatika,SMA,565,6.2
+Kesehatan,SMK,70,10.0
+Kesehatan,SMA,1248,7.5
+Kesehatan,MA,847,6.8
+Kesehatan,Lainnya,22,4.5
+Teknik,SMA,398,6.8
+Teknik,SMK,1343,6.6
+Teknik,MA,84,6.0
+Teknik,Lainnya,50,4.0
+Teknik Informatika,Lainnya,56,10.7
+Teknik Informatika,SMK,1503,7.9
+Teknik Informatika,SMA,552,7.2
+Teknik Informatika,MA,95,6.3

@@ -22,13 +22,11 @@ PALETTE = [BLUE, TEAL, AMBER, RED, PURPLE, "#3B82C4", "#F2C14E", "#4C9F70"]
 
 st.markdown("""
 <style>
-    /* ---------- Global ---------- */
     .block-container {padding-top: 0rem; padding-bottom: 2rem; max-width: 1250px;}
     [data-testid="stSidebar"] {background: linear-gradient(180deg,#10294F 0%,#16386E 100%);}
     [data-testid="stSidebar"] * {color: #E8EEF8 !important;}
     [data-testid="stSidebar"] .stMultiSelect label {font-weight: 600;}
 
-    /* ---------- Hero banner ---------- */
     .hero {
         background: linear-gradient(120deg, #0F2B5B 0%, #1B5DBF 55%, #0EA5A4 130%);
         border-radius: 18px;
@@ -40,7 +38,6 @@ st.markdown("""
     .hero h1 {margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing:.3px;}
     .hero p  {margin: .55rem 0 0 0; font-size: 1rem; opacity: .92;}
 
-    /* ---------- KPI cards ---------- */
     .kpi {
         background: #ffffff;
         border-radius: 14px;
@@ -49,12 +46,11 @@ st.markdown("""
         border-top: 4px solid var(--accent, #1B5DBF);
         height: 100%;
     }
-    .kpi .label {font-size: .82rem; font-weight: 700; color: #5B6B8C;
+    .kpi .label {font-size: .78rem; font-weight: 700; color: #5B6B8C;
                  text-transform: uppercase; letter-spacing: .6px;}
-    .kpi .value {font-size: 1.85rem; font-weight: 800; color: #16233B; line-height: 1.15;}
+    .kpi .value {font-size: 1.75rem; font-weight: 800; color: #16233B; line-height: 1.15;}
     .kpi .sub   {font-size: .8rem; color: #8A97B2; margin-top: .15rem;}
 
-    /* ---------- Section titles & insight boxes ---------- */
     .sec-title {font-size: 1.12rem; font-weight: 800; color: #16233B;
                 margin: .4rem 0 .2rem 0;}
     .insight {
@@ -64,17 +60,19 @@ st.markdown("""
         padding: .75rem 1rem;
         font-size: .88rem;
         color: #25406E;
-        margin-top: .4rem;
+        margin: .6rem 0;
     }
     .insight b {color: #1B5DBF;}
 
-    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {gap: .4rem;}
     .stTabs [data-baseweb="tab"] {
         background: #E8EEF8; border-radius: 10px 10px 0 0;
         padding: .45rem 1.1rem; font-weight: 700; color: #44557A;
     }
     .stTabs [aria-selected="true"] {background: #1B5DBF !important; color: white !important;}
+
+    [data-testid="stExpander"] {background: #FFFFFF; border-radius: 12px;
+        border: 1px solid #E2E9F4;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,6 +107,10 @@ def polish(fig, **kw):
 def insight_box(text):
     st.markdown(f'<div class="insight">💡 {text}</div>', unsafe_allow_html=True)
 
+def penjelasan(judul, isi_md):
+    with st.expander(f"📖 {judul}"):
+        st.markdown(isi_md)
+
 # ------------------------------------------------------------------ #
 #  Sidebar filters                                                    #
 # ------------------------------------------------------------------ #
@@ -134,6 +136,11 @@ mhs = mahasiswa[mahasiswa["angkatan"].isin(tahun_pilih)
                 & mahasiswa["jurusan"].isin(jurusan_pilih)
                 & mahasiswa["jalur_masuk"].isin(jalur_pilih)]
 
+# gabungkan skor masuk ke mahasiswa utk analisis korelasi
+mhs_x = mhs.merge(
+    pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
+    on="id_pendaftar", how="left")
+
 # ------------------------------------------------------------------ #
 #  Hero + KPI                                                         #
 # ------------------------------------------------------------------ #
@@ -146,16 +153,18 @@ st.markdown("""
 
 n_pend, n_lulus = len(pend), (pend["status_seleksi"] == "Lulus").sum()
 n_reg = (pend["daftar_ulang"] == "Ya").sum()
+n_do = (mhs["status_mahasiswa"] == "Drop Out").sum()
 
-k1, k2, k3, k4 = st.columns(4)
 kpis = [
     ("📥 Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran", BLUE),
     ("✅ Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar", TEAL),
     ("📝 Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus", AMBER),
     ("📊 Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ",") if len(mhs) else "-",
-     "seluruh mahasiswa terfilter", PURPLE),
+     "mahasiswa terfilter", PURPLE),
+    ("⚠️ Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
+     f"{titik(n_do)} mahasiswa", RED),
 ]
-for col, (label, val, sub, color) in zip([k1, k2, k3, k4], kpis):
+for col, (label, val, sub, color) in zip(st.columns(5), kpis):
     col.markdown(f"""
     <div class="kpi" style="--accent:{color}">
         <div class="label">{label}</div>
@@ -164,8 +173,9 @@ for col, (label, val, sub, color) in zip([k1, k2, k3, k4], kpis):
     </div>""", unsafe_allow_html=True)
 
 st.write("")
-tab1, tab2, tab3, tab4 = st.tabs(["📈 Tren & Funnel", "🏫 Program Studi",
-                                "🗺️ Demografi", "📊 Akademik"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["📈 Tren & Funnel", "🏫 Program Studi", "🗺️ Demografi",
+     "📊 Akademik", "🔍 Eksplorasi Data"])
 
 # ------------------------------------------------------------------ #
 #  TAB 1 — Tren & funnel                                              #
@@ -190,8 +200,21 @@ with tab1:
                 fillcolor="rgba(27,93,191,.08)"))
         polish(fig, legend=dict(orientation="h", y=1.14))
         st.plotly_chart(fig, use_container_width=True)
-        insight_box("Peminat tumbuh <b>~170%</b> dalam 6 tahun — lonjakan 2022 berbarengan "
-                    "dibukanya prodi S1 Terapan baru. Daya tampung flat → seleksi makin ketat.")
+
+        st.markdown('<div class="sec-title">Tingkat keketatan seleksi</div>',
+                    unsafe_allow_html=True)
+        ketat_t = (pend.groupby("tahun_daftar")["status_seleksi"]
+                   .apply(lambda s: 100 * (s == "Lulus").mean()).reset_index())
+        fig = go.Figure(go.Scatter(
+            x=ketat_t["tahun_daftar"], y=ketat_t["status_seleksi"],
+            mode="lines+markers+text",
+            text=ketat_t["status_seleksi"].map("{:.0f}%".format),
+            textposition="top center",
+            line=dict(width=3, color=RED), marker=dict(size=9),
+            fill="tozeroy", fillcolor="rgba(225,85,84,.08)"))
+        polish(fig, yaxis_title="% lulus seleksi",
+               title=dict(text="", font=dict(size=13)))
+        st.plotly_chart(fig, use_container_width=True)
 
     with c2:
         st.markdown('<div class="sec-title">Funnel konversi</div>', unsafe_allow_html=True)
@@ -204,18 +227,43 @@ with tab1:
         polish(fig)
         st.plotly_chart(fig, use_container_width=True)
 
+        st.markdown('<div class="sec-title">Conversion per jalur masuk</div>',
+                    unsafe_allow_html=True)
         jalur_f = (pend.groupby("jalur_masuk")
                    .agg(n=("id_pendaftar", "count"),
                         reg=("daftar_ulang", lambda s: (s == "Ya").sum()))
-                   .assign(rate=lambda d: 100 * d["reg"] / d["n"]).reset_index())
+                   .assign(rate=lambda d: 100 * d["reg"] / d["n"])
+                   .sort_values("rate").reset_index())
         fig = px.bar(jalur_f, x="rate", y="jalur_masuk", orientation="h",
                      color="rate", color_continuous_scale=["#Bcd2f2", BLUE],
                      text=jalur_f["rate"].map("{:.1f}%".format),
                      labels={"rate": "", "jalur_masuk": ""})
         fig.update_traces(textposition="outside")
-        polish(fig, showlegend=False, coloraxis_showscale=False,
-               title=dict(text="Conversion ke mahasiswa per jalur", font=dict(size=13)))
+        polish(fig, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
+
+    penjelasan("Cara membaca bagian ini", """
+**Grafik funnel (atas kiri)** menelusuri perjalanan pendaftar melalui 3 tahap:
+mendaftar → lulus seleksi → daftar ulang (resmi jadi mahasiswa). Jarak antar garis
+= berapa banyak yang "gugur" di tiap tahap.
+
+**Grafik keketatan** menunjukkan % pendaftar yang lulus per tahun. Tren **turun**
+(dari ~58% ke ~32%) berarti makin sulit masuk — peminat tumbuh lebih cepat
+daripada daya tampung. Ini indikator reputasi kampus yang membaik.
+
+**Funnel & conversion per jalur** menunjukkan jalur mana yang paling efektif
+menghasilkan mahasiswa baru. Perhatikan dua hal berbeda: (1) *pass rate* —
+seberapa sulit lulus di jalur itu (tergantung kuota jalur vs peminat), dan
+(2) *yield* — dari yang lulus, berapa yang benar-benar registrasi.
+Jalur Mandiri punya yield paling rendah karena pendaftar mandiri biasanya
+punya opsi PTN lain.
+
+⚠️ **Catatan:** data sintetis — polanya dimodelkan realistis, angkanya simulasi.
+""")
+
+    insight_box("Peminat tumbuh <b>~170%</b> dalam 6 tahun — lonjakan 2022 berbarengan "
+                "dibukanya prodi S1 Terapan baru. Keketatan naik: hanya <b>~32%</b> "
+                "pendaftar lulus di 2025 vs ~58% di 2019.")
 
 # ------------------------------------------------------------------ #
 #  TAB 2 — Program studi                                              #
@@ -251,17 +299,50 @@ with tab2:
         polish(fig, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
 
-    insight_box("TI & Kesehatan mendominasi peminat tapi tingkat diterimanya paling rendah. "
-                "Strategi <b>pilihan ke-2</b> jadi penentu peluang lolos calon mahasiswa.")
+    st.markdown('<div class="sec-title">Peminat vs tingkat diterima (bubble = total pendaftar)</div>',
+                unsafe_allow_html=True)
+    bubble = (pend.groupby(["prodi_pilihan_1", "jurusan"])
+              .agg(peminat=("id_pendaftar", "count"),
+                   diterima_pct=("status_seleksi", lambda s: 100 * (s == "Lulus").mean()),
+                   skor_med=("skor_seleksi", "median"))
+              .reset_index())
+    fig = px.scatter(bubble, x="peminat", y="diterima_pct", size="peminat",
+                     color="jurusan", hover_name="prodi_pilihan_1",
+                     size_max=48, labels={"peminat": "Total peminat",
+                                          "diterima_pct": "% diterima"},
+                     color_discrete_map={"Teknik Informatika": BLUE,
+                                         "Teknik": TEAL, "Kesehatan": RED})
+    polish(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="sec-title">Peta peminat prodi per tahun</div>',
                 unsafe_allow_html=True)
     heat = (pend.groupby(["tahun_daftar", "prodi_pilihan_1"]).size()
             .unstack(fill_value=0))
     fig = px.imshow(heat.T, aspect="auto", color_continuous_scale=["#FFFFFF", BLUE],
-                    labels=dict(x="Tahun", y="", color="Peminat"))
-    polish(fig, title=dict(text=""))
+                    labels=dict(x="Tahun", y="", color="Peminat"),
+                    text_auto=True)
+    polish(fig)
     st.plotly_chart(fig, use_container_width=True)
+
+    penjelasan("Cara membaca bagian ini", """
+**Bubble chart** adalah ringkasan paling kaya: sumbu-X = jumlah peminat,
+sumbu-Y = % diterima, ukuran gelembung = volume. Posisi ideal sebuah prodi
+secara "kesehatan seleksi" adalah kanan-bawah (banyak peminat, ketat) —
+tanda prodi unggulan. Kiri-atas = sepi peminat tapi mudah masuk —
+kandidat untuk promosi atau evaluasi daya tampung.
+
+**Heatmap tahun × prodi** menunjukkan evolusi demand. Baris yang "menyala"
+setelah tahun tertentu = prodi baru yang langsung diminati (contoh: prodi
+S1 Terapan 2022–2023).
+
+**Cara pakai sebagai calon mahasiswa:** bandingkan "diminati" vs "kompetitif" —
+selisihnya menunjukkan betapa padat persaingan. Pilihan ke-2 yang cerdas
+= prodi dengan peminat moderat tapi daya tampung cukup.
+""")
+
+    insight_box("TI & Kesehatan mendominasi peminat tapi tingkat diterimanya paling rendah. "
+                "Strategi <b>pilihan ke-2</b> jadi penentu peluang lolos calon mahasiswa.")
 
 # ------------------------------------------------------------------ #
 #  TAB 3 — Demografi                                                  #
@@ -302,6 +383,39 @@ with tab3:
         polish(fig, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
 
+    c4, c5 = st.columns(2, gap="large")
+    with c4:
+        st.markdown('<div class="sec-title">Konsentrasi domisili (tabel detail)</div>',
+                    unsafe_allow_html=True)
+        kt = mhs["asal_kota"].value_counts().reset_index()
+        kt.columns = ["Kota asal", "Mahasiswa"]
+        kt["%"] = (100 * kt["Mahasiswa"] / len(mhs)).round(1)
+        kt["% kumulatif"] = kt["%"].cumsum().round(1)
+        st.dataframe(kt, use_container_width=True, hide_index=True, height=350)
+    with c5:
+        st.markdown('<div class="sec-title">Jalur masuk per jurusan</div>',
+                    unsafe_allow_html=True)
+        jl = (mhs.groupby(["jurusan", "jalur_masuk"]).size()
+              .reset_index(name="n"))
+        fig = px.bar(jl, x="jurusan", y="n", color="jalur_masuk", barmode="stack",
+                     labels={"n": "Mahasiswa", "jurusan": "", "jalur_masuk": "Jalur"})
+        polish(fig, legend=dict(orientation="h", y=1.15))
+        st.plotly_chart(fig, use_container_width=True)
+
+    penjelasan("Cara membaca bagian ini", """
+**Kolom "% kumulatif"** di tabel domisili menunjukkan konsentrasi geografis:
+berapa % total mahasiswa yang tercakup oleh N kota teratas. Jika 3 kota
+teratas sudah mencakup >50%, kampus sangat bergantung pada satu wilayah —
+risiko jika demografi lokal menyusut.
+
+**Donut jenis sekolah** menunjukkan "feeders" utama kampus. Dominasi SMK di
+teknik adalah pola khas politeknik vokasi (kesinambungan keahlian);
+kesehatan didominasi SMA/MA yang sesuai requirement dasar sains.
+
+**Gender per jurusan** merefleksikan segregasi gender klasik bidang studi:
+teknik mesin/pendingin mayoritas laki-laki, keperawatan mayoritas perempuan.
+""")
+
     insight_box("<b>Kab. Indramayu sendirian menyumbang ~1/3 mahasiswa</b> — Polindra sangat "
                 "lokal. Teknik didominasi lulusan SMK + laki-laki; Kesehatan didominasi "
                 "SMA/MA + perempuan. Peluang besar: ekspansi brand ke luar Ciayumajakuning.")
@@ -326,7 +440,7 @@ with tab4:
         fig.update_xaxes(range=[0.8, 4.1], title="IPK")
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('<div class="sec-title">Heatmap dropout rate</div>',
+        st.markdown('<div class="sec-title">Heatmap dropout rate (jurusan × sekolah)</div>',
                     unsafe_allow_html=True)
         do_h = (mhs.groupby(["jurusan", "jenis_sekolah"])["status_mahasiswa"]
                 .apply(lambda s: 100 * (s == "Drop Out").mean()).unstack())
@@ -337,6 +451,19 @@ with tab4:
         st.plotly_chart(fig, use_container_width=True)
 
     with c2:
+        st.markdown('<div class="sec-title">Korelasi: nilai rapor masuk → IPK</div>',
+                    unsafe_allow_html=True)
+        samp = mhs_x.dropna(subset=["nilai_rapor", "ipk"])
+        corr = samp["nilai_rapor"].corr(samp["ipk"])
+        fig = px.scatter(samp.sample(min(2000, len(samp)), random_state=7),
+                         x="nilai_rapor", y="ipk", color="jurusan",
+                         opacity=0.45, trendline="ols", trendline_scope="overall",
+                         labels={"nilai_rapor": "Nilai rapor saat mendaftar",
+                                 "ipk": "IPK saat ini", "jurusan": ""})
+        polish(fig, legend=dict(orientation="h", y=1.15))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"Korelasi Pearson r = {corr:.2f} — semakin dekat ke ±1 semakin kuat hubungannya")
+
         st.markdown('<div class="sec-title">Rata-rata IPK per prodi</div>',
                     unsafe_allow_html=True)
         ipk_p = mhs.groupby("prodi")["ipk"].mean().sort_values().reset_index()
@@ -349,19 +476,106 @@ with tab4:
         fig.update_xaxes(range=[2.5, 3.8])
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('<div class="sec-title">Komposisi status mahasiswa</div>',
-                    unsafe_allow_html=True)
-        status = mhs["status_mahasiswa"].value_counts()
-        fig = go.Figure(go.Pie(
-            labels=status.index, values=status.values, hole=0.58,
-            marker=dict(colors=[TEAL, BLUE, AMBER, RED]),
-            textinfo="label+percent", textposition="outside"))
-        polish(fig, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+    penjelasan("Cara membaca bagian ini", """
+**Violin plot** = distribusi IPK penuh per jurusan. Lebar "biola" = seberapa
+banyak mahasiswa di rentang IPK itu; garis tengah = median; kotak = rentang
+kuartil (IQR). Lebih kaya dari rata-rata tunggal — kelihatan ekor panjang
+(mahasiswa ber-IPK rendah) di tiap jurusan.
 
-    insight_box("Mahasiswa jalur <b>SNMPN ber-IPK tertinggi (3,40)</b> — nilai rapor "
-                "terbukti prediktor performa akademik yang baik. Dropout terkonsentrasi "
-                "di angkatan muda → 2 tahun pertama adalah periode kritis retensi.")
+**Scatter rapor → IPK** menjawab pertanyaan strategis: *apakah nilai masuk
+memprediksi performa di kampus?* Garis tren (OLS) menunjukkan arah hubungan.
+r positif → nilai rapor memang berkorelasi dengan IPK, meski lemah-sedang
+(banyak faktor lain menentukan IPK).
+
+**Heatmap dropout** menunjukkan kombinasi jurusan × asal sekolah paling
+berisiko. Perhatikan misalnya lulusan MA di prodi teknik — background
+keahlian yang kurang sesuai bisa memperbesar risiko DO.
+
+⚠️ **Caveat penting:** korelasi ≠ kausalitas. Dan pada data sintetis, pola
+ini sengaja dimodelkan — di data riil, kekuatan hubungannya bisa beda.
+""")
+
+    insight_box("Mahasiswa jalur <b>SNMPN (seleksi rapor) ber-IPK tertinggi</b> — "
+                "nilai rapor terbukti prediktor performa akademik yang baik. Dropout "
+                "terkonsentrasi di angkatan muda → 2 tahun pertama periode kritis retensi.")
+
+# ------------------------------------------------------------------ #
+#  TAB 5 — Eksplorasi Data                                            #
+# ------------------------------------------------------------------ #
+with tab5:
+    st.markdown('<div class="sec-title">Eksplorasi data interaktif</div>',
+                unsafe_allow_html=True)
+    st.caption("Bangun tabel analisis sendiri: pilih tabel, dimensi, dan metrik.")
+
+    ec1, ec2, ec3 = st.columns(3)
+    with ec1:
+        tabel_pilih = st.selectbox("Tabel", ["pendaftar", "mahasiswa"])
+    with ec2:
+        base = pend if tabel_pilih == "pendaftar" else mhs
+        dims = st.multiselect("Dimensi (group by)", base.columns.tolist(),
+                              default=["jurusan"])
+    with ec3:
+        metrik = st.selectbox("Metrik", ["Jumlah baris", "Rata-rata skor_seleksi",
+                                         "Rata-rata IPK", "% Drop Out"])
+
+    if dims:
+        g = base.groupby(dims)
+        if metrik == "Jumlah baris":
+            res = g.size().reset_index(name="jumlah")
+        elif metrik == "Rata-rata skor_seleksi":
+            res = g["skor_seleksi"].mean().round(2).reset_index(
+                name="rata_skor") if "skor_seleksi" in base.columns else None
+            if res is None:
+                st.warning("Kolom skor_seleksi tidak ada di tabel mahasiswa.")
+                res = g.size().reset_index(name="jumlah")
+        elif metrik == "Rata-rata IPK":
+            res = g["ipk"].mean().round(2).reset_index(
+                name="rata_ipk") if "ipk" in base.columns else None
+            if res is None:
+                st.warning("Kolom ipk tidak ada di tabel pendaftar.")
+                res = g.size().reset_index(name="jumlah")
+        else:
+            res = (g["status_mahasiswa"]
+                   .apply(lambda s: round(100 * (s == "Drop Out").mean(), 1))
+                   .reset_index(name="dropout_pct")) \
+                if "status_mahasiswa" in base.columns else \
+                g.size().reset_index(name="jumlah")
+        st.dataframe(res, use_container_width=True, hide_index=True)
+        st.download_button("⬇️ Download hasil (CSV)", res.to_csv(index=False),
+                           "hasil_eksplorasi.csv", "text/csv")
+
+    st.divider()
+    st.markdown('<div class="sec-title">Pratinjau data mentah</div>',
+                unsafe_allow_html=True)
+    pv1, pv2 = st.columns(2)
+    with pv1:
+        st.markdown("**pendaftar** (100 baris pertama)")
+        st.dataframe(pend.head(100), use_container_width=True, height=300,
+                     hide_index=True)
+    with pv2:
+        st.markdown("**mahasiswa** (100 baris pertama)")
+        st.dataframe(mhs.head(100), use_container_width=True, height=300,
+                     hide_index=True)
+
+    penjelasan("Tentang dataset ini", """
+Dataset terdiri dari **2 tabel relasional**:
+
+- `pendaftar` (±17,9 ribu baris): satu baris = satu pendaftar PMB.
+  Memuat jalur masuk, pilihan prodi, demografi, nilai rapor/ujian,
+  dan status tiap tahap funnel (lulus → daftar ulang).
+- `mahasiswa` (±6,3 ribu baris): subset yang daftar ulang — memuat
+  NIM, prodi final, beasiswa KIP, IPK, dan status akademik.
+
+**Relasi:** `mahasiswa.id_pendaftar → pendaftar.id_pendaftar` (one-to-one,
+karena setiap mahasiswa lahir dari satu pendaftar).
+
+**Sumber:** data **sintetis** yang digenerate programatik
+(`src/generate_data.py`, seed=42) menggunakan struktur prodi riil Polindra
+(polindra.ac.id), proporsi demografi wilayah Ciayumajakuning (BPS), dan
+mekanisme seleksi per-kuota-jalur yang meniru kebijakan nyata: SNMPN/SBMPN
+era 2019–2023 → SNBP/SNBT era 2024–2025 (transisi SNPMB).
+Detail per kolom: `docs/DATA_DICTIONARY.md`. Daftar sumber: `docs/SUMBER_DATA.md`.
+""")
 
 st.markdown("---")
 st.caption("🎓 PMB Polindra Analytics · dataset sintetis untuk portofolio · "
