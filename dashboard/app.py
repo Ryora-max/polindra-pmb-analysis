@@ -17,62 +17,95 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-BLUE, TEAL, AMBER, RED, PURPLE = "#1B5DBF", "#0EA5A4", "#F59E0B", "#E15554", "#7C5CBF"
-PALETTE = [BLUE, TEAL, AMBER, RED, PURPLE, "#3B82C4", "#F2C14E", "#4C9F70"]
+# ---- Vibrant modern palette ----
+C_BLUE, C_CYAN, C_TEAL = "#3B82F6", "#06B6D4", "#14B8A6"
+C_GREEN, C_AMBER, C_ORANGE = "#22C55E", "#F59E0B", "#F97316"
+C_PINK, C_PURPLE, C_RED = "#EC4899", "#8B5CF6", "#EF4444"
+PALETTE = [C_BLUE, C_CYAN, C_GREEN, C_AMBER, C_PINK, C_PURPLE, C_ORANGE, C_TEAL]
 
 st.markdown("""
 <style>
-    .block-container {padding-top: 0rem; padding-bottom: 2rem; max-width: 1250px;}
-    [data-testid="stSidebar"] {background: linear-gradient(180deg,#10294F 0%,#16386E 100%);}
-    [data-testid="stSidebar"] * {color: #E8EEF8 !important;}
+    .block-container {padding-top: 0rem; padding-bottom: 2rem; max-width: 1280px;}
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg,#312E81 0%,#4C1D95 55%,#701A75 100%);}
+    [data-testid="stSidebar"] * {color: #F1EEFF !important;}
     [data-testid="stSidebar"] .stMultiSelect label {font-weight: 600;}
 
+    /* ---------- Hero ---------- */
     .hero {
-        background: linear-gradient(120deg, #0F2B5B 0%, #1B5DBF 55%, #0EA5A4 130%);
-        border-radius: 18px;
-        padding: 2.2rem 2.4rem 1.8rem 2.4rem;
-        margin: 1rem 0 1.4rem 0;
+        background: linear-gradient(115deg, #4F46E5 0%, #7C3AED 38%,
+                    #DB2777 75%, #F59E0B 120%);
+        border-radius: 20px;
+        padding: 2.3rem 2.4rem 1.9rem 2.4rem;
+        margin: 1rem 0 1.5rem 0;
         color: white;
-        box-shadow: 0 10px 30px rgba(15,43,91,.25);
+        box-shadow: 0 14px 34px rgba(124,58,237,.28);
+        position: relative; overflow: hidden;
     }
-    .hero h1 {margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing:.3px;}
-    .hero p  {margin: .55rem 0 0 0; font-size: 1rem; opacity: .92;}
+    .hero::after {
+        content:""; position:absolute; right:-70px; top:-70px;
+        width:230px; height:230px; border-radius:50%;
+        background: rgba(255,255,255,.14);
+    }
+    .hero::before {
+        content:""; position:absolute; right:60px; bottom:-90px;
+        width:170px; height:170px; border-radius:50%;
+        background: rgba(255,255,255,.10);
+    }
+    .hero h1 {margin: 0; font-size: 2rem; font-weight: 900; letter-spacing:.3px;}
+    .hero p  {margin: .55rem 0 0 0; font-size: 1rem; opacity: .93;}
 
+    /* ---------- Gradient KPI tiles ---------- */
     .kpi {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 1.05rem 1.15rem .95rem 1.15rem;
-        box-shadow: 0 3px 14px rgba(22,35,59,.07);
-        border-top: 4px solid var(--accent, #1B5DBF);
-        height: 100%;
+        border-radius: 16px;
+        padding: 1.1rem 1.2rem 1rem 1.2rem;
+        box-shadow: 0 6px 18px rgba(30,34,53,.12);
+        height: 100%; color: white;
+        position: relative; overflow: hidden;
     }
-    .kpi .label {font-size: .78rem; font-weight: 700; color: #5B6B8C;
-                 text-transform: uppercase; letter-spacing: .6px;}
-    .kpi .value {font-size: 1.75rem; font-weight: 800; color: #16233B; line-height: 1.15;}
-    .kpi .sub   {font-size: .8rem; color: #8A97B2; margin-top: .15rem;}
+    .kpi::after {content:""; position:absolute; right:-30px; top:-30px;
+        width:90px; height:90px; border-radius:50%;
+        background: rgba(255,255,255,.18);}
+    .kpi .label {font-size: .76rem; font-weight: 700; opacity:.92;
+                 text-transform: uppercase; letter-spacing: .7px;}
+    .kpi .value {font-size: 1.8rem; font-weight: 900; line-height: 1.15;}
+    .kpi .sub   {font-size: .8rem; opacity:.88; margin-top: .15rem;}
 
-    .sec-title {font-size: 1.12rem; font-weight: 800; color: #16233B;
-                margin: .4rem 0 .2rem 0;}
+    /* ---------- Section pills & insight boxes ---------- */
+    .sec-pill {
+        display:inline-block; font-size:1.05rem; font-weight:800;
+        color:#1E2235; margin:.5rem 0 .3rem 0;
+        padding:.15rem .8rem .15rem 0;
+    }
+    .sec-pill::before {
+        content:"●"; margin-right:.45rem; font-size:.9rem;
+    }
     .insight {
-        background: #EBF3FF;
-        border-left: 4px solid #1B5DBF;
-        border-radius: 0 10px 10px 0;
-        padding: .75rem 1rem;
+        border-radius: 0 12px 12px 0;
+        padding: .8rem 1rem;
         font-size: .88rem;
-        color: #25406E;
         margin: .6rem 0;
     }
-    .insight b {color: #1B5DBF;}
+    .insight.blue  {background:#EAF2FF; border-left:4px solid #3B82F6; color:#274C8E;}
+    .insight.green {background:#E9F9F0; border-left:4px solid #22C55E; color:#166534;}
+    .insight.amber {background:#FFF6E5; border-left:4px solid #F59E0B; color:#92580A;}
+    .insight b {color: inherit; font-weight:800;}
 
-    .stTabs [data-baseweb="tab-list"] {gap: .4rem;}
+    /* ---------- Tabs ---------- */
+    .stTabs [data-baseweb="tab-list"] {gap: .45rem;}
     .stTabs [data-baseweb="tab"] {
-        background: #E8EEF8; border-radius: 10px 10px 0 0;
-        padding: .45rem 1.1rem; font-weight: 700; color: #44557A;
+        background: #ECECF6; border-radius: 10px 10px 0 0;
+        padding: .45rem 1.1rem; font-weight: 700; color: #5A5F7E;
     }
-    .stTabs [aria-selected="true"] {background: #1B5DBF !important; color: white !important;}
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(120deg,#7C3AED,#DB2777) !important;
+        color: white !important;
+    }
 
     [data-testid="stExpander"] {background: #FFFFFF; border-radius: 12px;
-        border: 1px solid #E2E9F4;}
+        border: 1px solid #E6E8F2;}
+    [data-testid="stDataFrame"] {border-radius: 12px; overflow:hidden;
+        border:1px solid #E6E8F2;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,21 +124,28 @@ def titik(x):
     return f"{x:,.0f}".replace(",", ".")
 
 BASE_LAYOUT = dict(
-    font=dict(family="Inter, Segoe UI, sans-serif", size=13, color="#16233B"),
+    font=dict(family="Inter, Segoe UI, sans-serif", size=13, color="#1E2235"),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=10, r=10, t=46, b=10),
-    title=dict(font=dict(size=15, color="#16233B")),
+    title=dict(font=dict(size=15, color="#1E2235")),
     colorway=PALETTE,
 )
 
 def polish(fig, **kw):
     fig.update_layout(**{**BASE_LAYOUT, **kw})
     fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(gridcolor="#E7EDF7", zeroline=False)
+    fig.update_yaxes(gridcolor="#ECECF6", zeroline=False)
     return fig
 
-def insight_box(text):
-    st.markdown(f'<div class="insight">💡 {text}</div>', unsafe_allow_html=True)
+def insight_box(text, tone="blue"):
+    st.markdown(f'<div class="insight {tone}">💡 {text}</div>',
+                unsafe_allow_html=True)
+
+def sec(icon, label, color):
+    st.markdown(
+        f'<div class="sec-pill" style="color:{color}">{icon} '
+        f'<span style="color:#1E2235">{label}</span></div>',
+        unsafe_allow_html=True)
 
 def penjelasan(judul, isi_md):
     with st.expander(f"📖 {judul}"):
@@ -127,7 +167,7 @@ jalur_pilih = st.sidebar.multiselect(
     default=sorted(pendaftar["jalur_masuk"].unique()))
 
 st.sidebar.divider()
-st.sidebar.caption("📊 Dataset sintetis · simulasi berbasis struktur prodi riil Polindra")
+st.sidebar.caption("📊 Dataset sintetis · simulasi terkalibrasi data riil Polindra")
 
 pend = pendaftar[pendaftar["tahun_daftar"].isin(tahun_pilih)
                  & pendaftar["jurusan"].isin(jurusan_pilih)
@@ -136,7 +176,6 @@ mhs = mahasiswa[mahasiswa["angkatan"].isin(tahun_pilih)
                 & mahasiswa["jurusan"].isin(jurusan_pilih)
                 & mahasiswa["jalur_masuk"].isin(jalur_pilih)]
 
-# gabungkan skor masuk ke mahasiswa utk analisis korelasi
 mhs_x = mhs.merge(
     pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
     on="id_pendaftar", how="left")
@@ -155,18 +194,25 @@ n_pend, n_lulus = len(pend), (pend["status_seleksi"] == "Lulus").sum()
 n_reg = (pend["daftar_ulang"] == "Ya").sum()
 n_do = (mhs["status_mahasiswa"] == "Drop Out").sum()
 
+GRAD = {
+    "blue":   "linear-gradient(135deg,#3B82F6 0%,#2563EB 100%)",
+    "teal":   "linear-gradient(135deg,#14B8A6 0%,#0D9488 100%)",
+    "amber":  "linear-gradient(135deg,#F59E0B 0%,#F97316 100%)",
+    "purple": "linear-gradient(135deg,#8B5CF6 0%,#7C3AED 100%)",
+    "pink":   "linear-gradient(135deg,#EC4899 0%,#EF4444 120%)",
+}
 kpis = [
-    ("📥 Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran", BLUE),
-    ("✅ Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar", TEAL),
-    ("📝 Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus", AMBER),
+    ("📥 Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran", GRAD["blue"]),
+    ("✅ Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar", GRAD["teal"]),
+    ("📝 Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus", GRAD["amber"]),
     ("📊 Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ",") if len(mhs) else "-",
-     "mahasiswa terfilter", PURPLE),
+     "mahasiswa terfilter", GRAD["purple"]),
     ("⚠️ Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
-     f"{titik(n_do)} mahasiswa", RED),
+     f"{titik(n_do)} mahasiswa", GRAD["pink"]),
 ]
-for col, (label, val, sub, color) in zip(st.columns(5), kpis):
+for col, (label, val, sub, grad) in zip(st.columns(5), kpis):
     col.markdown(f"""
-    <div class="kpi" style="--accent:{color}">
+    <div class="kpi" style="background:{grad}">
         <div class="label">{label}</div>
         <div class="value">{val}</div>
         <div class="sub">{sub}</div>
@@ -184,25 +230,23 @@ with tab1:
     c1, c2 = st.columns([3, 2], gap="large")
 
     with c1:
-        st.markdown('<div class="sec-title">Pertumbuhan funnel 2019–2025</div>',
-                    unsafe_allow_html=True)
+        sec("📈", "Pertumbuhan funnel 2019–2025", C_BLUE)
         tren = (pend.groupby("tahun_daftar")
                 .agg(Pendaftar=("id_pendaftar", "count"),
                      Lulus=("status_seleksi", lambda s: (s == "Lulus").sum()),
                      Registrasi=("daftar_ulang", lambda s: (s == "Ya").sum()))
                 .reset_index())
         fig = go.Figure()
-        for col, color in [("Pendaftar", BLUE), ("Lulus", TEAL), ("Registrasi", AMBER)]:
+        for col, color in [("Pendaftar", C_BLUE), ("Lulus", C_GREEN), ("Registrasi", C_ORANGE)]:
             fig.add_trace(go.Scatter(
                 x=tren["tahun_daftar"], y=tren[col], name=col, mode="lines+markers",
-                line=dict(width=3, color=color), marker=dict(size=8),
+                line=dict(width=3.5, color=color), marker=dict(size=9),
                 fill="tozeroy" if col == "Pendaftar" else None,
-                fillcolor="rgba(27,93,191,.08)"))
+                fillcolor="rgba(59,130,246,.10)"))
         polish(fig, legend=dict(orientation="h", y=1.14))
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('<div class="sec-title">Tingkat keketatan seleksi</div>',
-                    unsafe_allow_html=True)
+        sec("🔥", "Tingkat keketatan seleksi", C_RED)
         ketat_t = (pend.groupby("tahun_daftar")["status_seleksi"]
                    .apply(lambda s: 100 * (s == "Lulus").mean()).reset_index())
         fig = go.Figure(go.Scatter(
@@ -210,36 +254,34 @@ with tab1:
             mode="lines+markers+text",
             text=ketat_t["status_seleksi"].map("{:.0f}%".format),
             textposition="top center",
-            line=dict(width=3, color=RED), marker=dict(size=9),
-            fill="tozeroy", fillcolor="rgba(225,85,84,.08)"))
-        polish(fig, yaxis_title="% lulus seleksi",
-               title=dict(text="", font=dict(size=13)))
+            line=dict(width=3.5, color=C_PINK), marker=dict(size=10),
+            fill="tozeroy", fillcolor="rgba(236,72,153,.10)"))
+        polish(fig, yaxis_title="% lulus seleksi")
         st.plotly_chart(fig, use_container_width=True)
 
     with c2:
-        st.markdown('<div class="sec-title">Funnel konversi</div>', unsafe_allow_html=True)
+        sec("🧲", "Funnel konversi", C_PURPLE)
         fig = go.Figure(go.Funnel(
             y=["Pendaftar", "Lulus Seleksi", "Daftar Ulang"],
             x=[n_pend, n_lulus, n_reg],
             textinfo="value+percent initial",
-            marker=dict(color=[BLUE, TEAL, AMBER]),
-            connector=dict(line=dict(color="#C7D4EA", width=2))))
+            marker=dict(color=[C_BLUE, C_CYAN, C_AMBER]),
+            connector=dict(line=dict(color="#D6D8F0", width=2))))
         polish(fig)
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('<div class="sec-title">Conversion per jalur masuk</div>',
-                    unsafe_allow_html=True)
+        sec("🎯", "Conversion per jalur masuk", C_TEAL)
         jalur_f = (pend.groupby("jalur_masuk")
                    .agg(n=("id_pendaftar", "count"),
                         reg=("daftar_ulang", lambda s: (s == "Ya").sum()))
                    .assign(rate=lambda d: 100 * d["reg"] / d["n"])
                    .sort_values("rate").reset_index())
         fig = px.bar(jalur_f, x="rate", y="jalur_masuk", orientation="h",
-                     color="rate", color_continuous_scale=["#Bcd2f2", BLUE],
+                     color="jalur_masuk", color_discrete_sequence=PALETTE,
                      text=jalur_f["rate"].map("{:.1f}%".format),
                      labels={"rate": "", "jalur_masuk": ""})
         fig.update_traces(textposition="outside")
-        polish(fig, showlegend=False, coloraxis_showscale=False)
+        polish(fig, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
     penjelasan("Cara membaca bagian ini", """
@@ -263,7 +305,7 @@ punya opsi PTN lain.
 
     insight_box("Peminat tumbuh <b>~170%</b> dalam 6 tahun — lonjakan 2022 berbarengan "
                 "dibukanya prodi S1 Terapan baru. Keketatan naik: hanya <b>~32%</b> "
-                "pendaftar lulus di 2025 vs ~58% di 2019.")
+                "pendaftar lulus di 2025 vs ~58% di 2019.", "blue")
 
 # ------------------------------------------------------------------ #
 #  TAB 2 — Program studi                                              #
@@ -272,54 +314,50 @@ with tab2:
     c1, c2 = st.columns(2, gap="large")
 
     with c1:
-        st.markdown('<div class="sec-title">Prodi paling diminati</div>',
-                    unsafe_allow_html=True)
+        sec("🏆", "Prodi paling diminati", C_BLUE)
         peminat = (pend["prodi_pilihan_1"].value_counts().head(10)
                    .sort_values().reset_index())
         peminat.columns = ["prodi", "peminat"]
         fig = px.bar(peminat, x="peminat", y="prodi", orientation="h",
-                     color="peminat", color_continuous_scale=["#9CC0EE", BLUE],
+                     color="peminat", color_continuous_scale="Viridis",
                      text="peminat", labels={"prodi": "", "peminat": "Peminat"})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
 
     with c2:
-        st.markdown('<div class="sec-title">Prodi paling kompetitif</div>',
-                    unsafe_allow_html=True)
+        sec("🔥", "Prodi paling kompetitif", C_ORANGE)
         ketat = (pend.groupby("prodi_pilihan_1")
                  .agg(n=("id_pendaftar", "count"),
                       acc=("status_seleksi", lambda s: (s == "Lulus").mean() * 100))
                  .query("n >= 50").nsmallest(10, "acc").sort_values("acc").reset_index())
         fig = px.bar(ketat, x="acc", y="prodi_pilihan_1", orientation="h",
-                     color="acc", color_continuous_scale=[AMBER, "#F6D9A8"],
+                     color="acc", color_continuous_scale="Sunset",
                      text=ketat["acc"].map("{:.0f}%".format),
                      labels={"acc": "% diterima", "prodi_pilihan_1": ""})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="sec-title">Peminat vs tingkat diterima (bubble = total pendaftar)</div>',
-                unsafe_allow_html=True)
+    sec("🫧", "Peminat vs tingkat diterima (bubble = total pendaftar)", C_PURPLE)
     bubble = (pend.groupby(["prodi_pilihan_1", "jurusan"])
               .agg(peminat=("id_pendaftar", "count"),
-                   diterima_pct=("status_seleksi", lambda s: 100 * (s == "Lulus").mean()),
-                   skor_med=("skor_seleksi", "median"))
+                   diterima_pct=("status_seleksi", lambda s: 100 * (s == "Lulus").mean()))
               .reset_index())
     fig = px.scatter(bubble, x="peminat", y="diterima_pct", size="peminat",
                      color="jurusan", hover_name="prodi_pilihan_1",
-                     size_max=48, labels={"peminat": "Total peminat",
-                                          "diterima_pct": "% diterima"},
-                     color_discrete_map={"Teknik Informatika": BLUE,
-                                         "Teknik": TEAL, "Kesehatan": RED})
+                     size_max=50,
+                     labels={"peminat": "Total peminat",
+                             "diterima_pct": "% diterima"},
+                     color_discrete_map={"Teknik Informatika": C_PURPLE,
+                                         "Teknik": C_CYAN, "Kesehatan": C_PINK})
     polish(fig)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="sec-title">Peta peminat prodi per tahun</div>',
-                unsafe_allow_html=True)
+    sec("🗺️", "Peta peminat prodi per tahun", C_TEAL)
     heat = (pend.groupby(["tahun_daftar", "prodi_pilihan_1"]).size()
             .unstack(fill_value=0))
-    fig = px.imshow(heat.T, aspect="auto", color_continuous_scale=["#FFFFFF", BLUE],
+    fig = px.imshow(heat.T, aspect="auto", color_continuous_scale="Turbo",
                     labels=dict(x="Tahun", y="", color="Peminat"),
                     text_auto=True)
     polish(fig)
@@ -341,8 +379,9 @@ selisihnya menunjukkan betapa padat persaingan. Pilihan ke-2 yang cerdas
 = prodi dengan peminat moderat tapi daya tampung cukup.
 """)
 
-    insight_box("TI & Kesehatan mendominasi peminat tapi tingkat diterimanya paling rendah. "
-                "Strategi <b>pilihan ke-2</b> jadi penentu peluang lolos calon mahasiswa.")
+    insight_box("D3 Keperawatan & D3 Teknik Informatika memimpin peminat — konsisten "
+                "dengan data riil peminat SNBT 2025 Polindra. Tingkat diterima prodi "
+                "populer jauh lebih rendah → strategi <b>pilihan ke-2</b> jadi penentu.", "amber")
 
 # ------------------------------------------------------------------ #
 #  TAB 3 — Demografi                                                  #
@@ -351,33 +390,30 @@ with tab3:
     c1, c2, c3 = st.columns([2, 2, 3], gap="large")
 
     with c1:
-        st.markdown('<div class="sec-title">Jenis sekolah asal</div>',
-                    unsafe_allow_html=True)
+        sec("🏫", "Jenis sekolah asal", C_TEAL)
         sekolah = mhs["jenis_sekolah"].value_counts()
         fig = go.Figure(go.Pie(
             labels=sekolah.index, values=sekolah.values, hole=0.58,
-            marker=dict(colors=[TEAL, BLUE, AMBER, "#C7D4EA"]),
+            marker=dict(colors=[C_TEAL, C_BLUE, C_AMBER, C_PURPLE]),
             textinfo="label+percent", textposition="outside"))
         polish(fig, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
     with c2:
-        st.markdown('<div class="sec-title">Gender per jurusan</div>',
-                    unsafe_allow_html=True)
+        sec("👫", "Gender per jurusan", C_PINK)
         g = mhs.groupby(["jurusan", "jenis_kelamin"]).size().reset_index(name="n")
         fig = px.bar(g, x="n", y="jurusan", color="jenis_kelamin", orientation="h",
-                     barmode="stack", color_discrete_map={"L": BLUE, "P": "#F1919B"},
+                     barmode="stack", color_discrete_map={"L": C_BLUE, "P": C_PINK},
                      labels={"n": "", "jurusan": "", "jenis_kelamin": ""})
         polish(fig, legend=dict(orientation="h", y=1.15))
         st.plotly_chart(fig, use_container_width=True)
 
     with c3:
-        st.markdown('<div class="sec-title">Top 10 kota asal mahasiswa</div>',
-                    unsafe_allow_html=True)
+        sec("📍", "Top 10 kota asal mahasiswa", C_GREEN)
         kota = mhs["asal_kota"].value_counts().head(10).sort_values().reset_index()
         kota.columns = ["kota", "n"]
         fig = px.bar(kota, x="n", y="kota", orientation="h",
-                     color="n", color_continuous_scale=["#9CC0EE", TEAL],
+                     color="n", color_continuous_scale="Emrld",
                      text="n", labels={"kota": "", "n": ""})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
@@ -385,19 +421,18 @@ with tab3:
 
     c4, c5 = st.columns(2, gap="large")
     with c4:
-        st.markdown('<div class="sec-title">Konsentrasi domisili (tabel detail)</div>',
-                    unsafe_allow_html=True)
+        sec("📋", "Konsentrasi domisili (tabel detail)", C_BLUE)
         kt = mhs["asal_kota"].value_counts().reset_index()
         kt.columns = ["Kota asal", "Mahasiswa"]
         kt["%"] = (100 * kt["Mahasiswa"] / len(mhs)).round(1)
         kt["% kumulatif"] = kt["%"].cumsum().round(1)
         st.dataframe(kt, use_container_width=True, hide_index=True, height=350)
     with c5:
-        st.markdown('<div class="sec-title">Jalur masuk per jurusan</div>',
-                    unsafe_allow_html=True)
+        sec("🧩", "Jalur masuk per jurusan", C_PURPLE)
         jl = (mhs.groupby(["jurusan", "jalur_masuk"]).size()
               .reset_index(name="n"))
         fig = px.bar(jl, x="jurusan", y="n", color="jalur_masuk", barmode="stack",
+                     color_discrete_sequence=PALETTE,
                      labels={"n": "Mahasiswa", "jurusan": "", "jalur_masuk": "Jalur"})
         polish(fig, legend=dict(orientation="h", y=1.15))
         st.plotly_chart(fig, use_container_width=True)
@@ -418,7 +453,7 @@ teknik mesin/pendingin mayoritas laki-laki, keperawatan mayoritas perempuan.
 
     insight_box("<b>Kab. Indramayu sendirian menyumbang ~1/3 mahasiswa</b> — Polindra sangat "
                 "lokal. Teknik didominasi lulusan SMK + laki-laki; Kesehatan didominasi "
-                "SMA/MA + perempuan. Peluang besar: ekspansi brand ke luar Ciayumajakuning.")
+                "SMA/MA + perempuan. Peluang besar: ekspansi brand ke luar Ciayumajakuning.", "green")
 
 # ------------------------------------------------------------------ #
 #  TAB 4 — Akademik                                                   #
@@ -427,10 +462,10 @@ with tab4:
     c1, c2 = st.columns(2, gap="large")
 
     with c1:
-        st.markdown('<div class="sec-title">Distribusi IPK per jurusan</div>',
-                    unsafe_allow_html=True)
+        sec("🎻", "Distribusi IPK per jurusan", C_BLUE)
         fig = go.Figure()
-        colors_j = dict(zip(sorted(mhs["jurusan"].unique()), [BLUE, TEAL, AMBER]))
+        colors_j = dict(zip(sorted(mhs["jurusan"].unique()),
+                            [C_BLUE, C_PINK, C_TEAL]))
         for jur, sub in mhs.groupby("jurusan"):
             fig.add_trace(go.Violin(
                 x=sub["ipk"], name=jur, line_color=colors_j[jur],
@@ -440,35 +475,34 @@ with tab4:
         fig.update_xaxes(range=[0.8, 4.1], title="IPK")
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('<div class="sec-title">Heatmap dropout rate (jurusan × sekolah)</div>',
-                    unsafe_allow_html=True)
+        sec("🌡️", "Heatmap dropout rate (jurusan × sekolah)", C_RED)
         do_h = (mhs.groupby(["jurusan", "jenis_sekolah"])["status_mahasiswa"]
                 .apply(lambda s: 100 * (s == "Drop Out").mean()).unstack())
         fig = px.imshow(do_h, aspect="auto", text_auto=".1f",
-                        color_continuous_scale=["#FFFFFF", RED],
+                        color_continuous_scale="RdYlGn_r",
                         labels=dict(x="Jenis sekolah", y="", color="DO %"))
         polish(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with c2:
-        st.markdown('<div class="sec-title">Korelasi: nilai rapor masuk → IPK</div>',
-                    unsafe_allow_html=True)
+        sec("🔬", "Korelasi: nilai rapor masuk → IPK", C_PURPLE)
         samp = mhs_x.dropna(subset=["nilai_rapor", "ipk"])
         corr = samp["nilai_rapor"].corr(samp["ipk"])
         fig = px.scatter(samp.sample(min(2000, len(samp)), random_state=7),
                          x="nilai_rapor", y="ipk", color="jurusan",
-                         opacity=0.45, trendline="ols", trendline_scope="overall",
+                         opacity=0.5, trendline="ols", trendline_scope="overall",
                          labels={"nilai_rapor": "Nilai rapor saat mendaftar",
-                                 "ipk": "IPK saat ini", "jurusan": ""})
+                                 "ipk": "IPK saat ini", "jurusan": ""},
+                         color_discrete_map={"Teknik Informatika": C_PURPLE,
+                                             "Teknik": C_CYAN, "Kesehatan": C_PINK})
         polish(fig, legend=dict(orientation="h", y=1.15))
         st.plotly_chart(fig, use_container_width=True)
         st.caption(f"Korelasi Pearson r = {corr:.2f} — semakin dekat ke ±1 semakin kuat hubungannya")
 
-        st.markdown('<div class="sec-title">Rata-rata IPK per prodi</div>',
-                    unsafe_allow_html=True)
+        sec("⭐", "Rata-rata IPK per prodi", C_AMBER)
         ipk_p = mhs.groupby("prodi")["ipk"].mean().sort_values().reset_index()
         fig = px.bar(ipk_p, x="ipk", y="prodi", orientation="h",
-                     color="ipk", color_continuous_scale=["#C7D4EA", PURPLE],
+                     color="ipk", color_continuous_scale="Purp",
                      text=ipk_p["ipk"].map("{:.2f}".format),
                      labels={"prodi": "", "ipk": ""})
         fig.update_traces(textposition="outside")
@@ -497,14 +531,13 @@ ini sengaja dimodelkan — di data riil, kekuatan hubungannya bisa beda.
 
     insight_box("Mahasiswa jalur <b>SNMPN (seleksi rapor) ber-IPK tertinggi</b> — "
                 "nilai rapor terbukti prediktor performa akademik yang baik. Dropout "
-                "terkonsentrasi di angkatan muda → 2 tahun pertama periode kritis retensi.")
+                "terkonsentrasi di angkatan muda → 2 tahun pertama periode kritis retensi.", "blue")
 
 # ------------------------------------------------------------------ #
 #  TAB 5 — Eksplorasi Data                                            #
 # ------------------------------------------------------------------ #
 with tab5:
-    st.markdown('<div class="sec-title">Eksplorasi data interaktif</div>',
-                unsafe_allow_html=True)
+    sec("🔍", "Eksplorasi data interaktif", C_PURPLE)
     st.caption("Bangun tabel analisis sendiri: pilih tabel, dimensi, dan metrik.")
 
     ec1, ec2, ec3 = st.columns(3)
@@ -545,8 +578,7 @@ with tab5:
                            "hasil_eksplorasi.csv", "text/csv")
 
     st.divider()
-    st.markdown('<div class="sec-title">Pratinjau data mentah</div>',
-                unsafe_allow_html=True)
+    sec("🗃️", "Pratinjau data mentah", C_TEAL)
     pv1, pv2 = st.columns(2)
     with pv1:
         st.markdown("**pendaftar** (100 baris pertama)")
