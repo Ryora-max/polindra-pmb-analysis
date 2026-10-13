@@ -147,7 +147,37 @@ mahasiswa.groupby("jalur_masuk").agg(
 
 cells.append(nbf.v4.new_markdown_cell("""**Insight:** Mahasiswa jalur SNMPN (seleksi rapor) mencatat rata-rata IPK tertinggi — sinyal bahwa nilai rapor adalah prediktor performa akademik yang baik, konsisten dengan literatur admission research. Dropout rate antar jalur relatif seragam (~6–7%), artinya jalur masuk lebih berpengaruh ke kualitas akademik daripada ke retensi."""))
 
-cells.append(nbf.v4.new_markdown_cell("""## 7. Kesimpulan & Rekomendasi
+cells.append(nbf.v4.new_markdown_cell("""## 7. Cohort Retention Analysis
+
+Status mahasiswa per angkatan — melihat pola kelulusan, retensi, dan dropout antar cohort."""))
+
+cells.append(nbf.v4.new_code_cell("""# Komposisi status per angkatan (cohort)
+cohort = (mahasiswa.groupby(["angkatan","status_mahasiswa"]).size().unstack(fill_value=0))
+cohort_pct = cohort.div(cohort.sum(axis=1), axis=0) * 100
+
+fig, ax = plt.subplots(figsize=(11,5))
+bottom = np.zeros(len(cohort_pct))
+colors = {"Lulus":"#4C9F70","Aktif":"#4C72B0","Cuti":"#DD8452","Drop Out":"#C44E52"}
+for st in ["Lulus","Aktif","Cuti","Drop Out"]:
+    if st in cohort_pct.columns:
+        ax.bar(cohort_pct.index, cohort_pct[st], bottom=bottom,
+               label=st, color=colors[st])
+        bottom += cohort_pct[st].values
+ax.set_title("Komposisi status mahasiswa per angkatan (%)")
+ax.set_ylabel("%"); ax.legend(title="Status", ncol=4, loc="lower center",
+                              bbox_to_anchor=(0.5,-0.22))
+plt.tight_layout()
+plt.savefig("../outputs/figures/cohort_retention.png", bbox_inches="tight"); plt.show()
+
+# Tingkat keketatan seleksi makin tinggi seiring pertumbuhan peminat
+keketatan = (pendaftar.groupby("tahun_daftar")["status_seleksi"]
+             .apply(lambda s: 100*(s=="Lulus").mean()).round(1))
+print("% lulus seleksi per tahun (makin kecil = makin kompetitif):")
+print(keketatan)"""))
+
+cells.append(nbf.v4.new_markdown_cell("""**Insight:** Cohort analysis menunjukkan pola siklus akademik yang sehat — angkatan ≥3 tahun didominasi status Lulus, angkatan muda didominasi Aktif. Angka dropout terkonsentrasi di angkatan muda (2 tahun pertama masa studi) — periode kritis di mana intervensi early-warning paling efektif. Di sisi lain, **persentase lulus seleksi turun dari ~58% (2019) ke ~32% (2025)** — Polindra makin kompetitif seiring naiknya peminat."""))
+
+cells.append(nbf.v4.new_markdown_cell("""## 8. Kesimpulan & Rekomendasi
 
 1. **Demand naik kuat** — pertahankan tren penambahan prodi; SIKC & prodi S1T baru cepat diminati.
 2. **Ketimpangan keketatan** — prodi TI & Kesehatan sangat kompetitif; pertimbangkan tambah daya tampung atau sosialisasi prodi teknik yang sepi.

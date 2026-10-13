@@ -31,8 +31,11 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 ├── src/
 │   ├── generate_data.py   # Generator dataset sintetis (reproducible, seed=42)
 │   ├── db_setup.py        # Loader CSV → SQLite
+│   ├── run_sql_analysis.py# Eksekusi semua query.sql → export CSV per hasil
 │   └── make_notebook.py   # Builder notebook via nbformat
-└── outputs/figures/       # Grafik hasil analisis
+└── outputs/
+    ├── figures/           # Grafik hasil analisis
+    └── sql_results/       # Output CSV dari tiap query SQL
 ```
 
 ## Dataset
@@ -55,6 +58,9 @@ pip install -r requirements.txt
 python src/generate_data.py
 python src/db_setup.py
 
+# (opsional) jalankan seluruh analisis SQL → outputs/sql_results/
+python src/run_sql_analysis.py
+
 # jalankan dashboard
 streamlit run dashboard/app.py
 
@@ -66,12 +72,16 @@ notebooks/01_analisis_pmb_polindra.ipynb
 
 - **Demand naik ~170%** dalam 6 tahun; lonjakan mulai 2022 berbarengan dengan
   pembukaan prodi S1 Terapan baru (SIKC, Elektro-Medis, Instrumen & Kontrol).
+- **Seleksi makin kompetitif**: persentase lulus seleksi turun dari ~58% (2019)
+  ke ~32% (2025) — peminat tumbuh jauh lebih cepat dari daya tampung.
 - **Prodi Teknik Informatika & Kesehatan paling diminati** — daya tampung sama
   tetapi peminat jauh lebih besar → tingkat diterima rendah.
 - **Jalur Mandiri punya leakage daftar ulang tertinggi** (~22% lulus tidak jadi
   registrasi) — peluang perbaikan *yield* via follow-up aktif pendaftar.
 - **Mahasiswa jalur SNMPN mencatat IPK tertinggi** — nilai rapor terbukti
   prediktor performa akademik yang baik.
+- **Dropout terkonsentrasi di 2 tahun pertama** masa studi — periode kritis
+  untuk program early-warning & mentoring.
 - **Polindra sangat lokal**: mayoritas mahasiswa dari Indramayu &
   Ciayumajakuning — peluang diversifikasi geografis.
 
