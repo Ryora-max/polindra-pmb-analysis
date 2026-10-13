@@ -115,9 +115,10 @@ st.markdown("""
 @st.cache_data
 def load_data():
     return (pd.read_csv("data/raw/pendaftar.csv"),
-            pd.read_csv("data/raw/mahasiswa.csv"))
+            pd.read_csv("data/raw/mahasiswa.csv"),
+            pd.read_csv("data/raw/khs.csv"))
 
-pendaftar, mahasiswa = load_data()
+pendaftar, mahasiswa, khs = load_data()
 
 def titik(x):
     """Format ribuan ala Indonesia: 17900 -> '17.900'."""
@@ -185,6 +186,7 @@ mhs = mahasiswa[mahasiswa["angkatan"].isin(tahun_pilih)
 mhs_x = mhs.merge(
     pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
     on="id_pendaftar", how="left")
+khs_x = khs.merge(mhs[["nim", "status_mahasiswa"]], on="nim", how="left")
 
 # ------------------------------------------------------------------ #
 #  Hero + KPI                                                         #
@@ -290,6 +292,16 @@ with tab1:
         polish(fig, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
+    sec("📣", "Kanal akuisisi pendaftar per tahun", C_ORANGE)
+    kanal = (pend.groupby(["tahun_daftar", "sumber_informasi"]).size()
+             .reset_index(name="n"))
+    fig = px.area(kanal, x="tahun_daftar", y="n", color="sumber_informasi",
+                  color_discrete_sequence=PALETTE,
+                  labels={"n": "Pendaftar", "tahun_daftar": "Tahun",
+                          "sumber_informasi": "Kanal"})
+    polish(fig, legend=dict(orientation="h", y=-0.18))
+    st.plotly_chart(fig, use_container_width=True)
+
     penjelasan("Cara membaca bagian ini", """
 **Grafik funnel (atas kiri)** menelusuri perjalanan pendaftar melalui 3 tahap:
 mendaftar → lulus seleksi → daftar ulang (resmi jadi mahasiswa). Jarak antar garis
@@ -305,6 +317,11 @@ seberapa sulit lulus di jalur itu (tergantung kuota jalur vs peminat), dan
 (2) *yield* — dari yang lulus, berapa yang benar-benar registrasi.
 Jalur Mandiri punya yield paling rendah karena pendaftar mandiri biasanya
 punya opsi PTN lain.
+
+**Kanal akuisisi** menunjukkan *dari mana pendaftar tahu Polindra*. Perhatikan
+pergeseran: TikTok/IG melesat pasca-2021 (generasi digital native), sementara
+kanal tradisional (guru BK, pameran) melandai — data seperti ini dipakai tim
+marketing untuk alokasi budget promosi.
 
 ⚠️ **Catatan:** data sintetis — polanya dimodelkan realistis, angkanya simulasi.
 """)
@@ -516,6 +533,19 @@ with tab4:
         fig.update_xaxes(range=[2.5, 3.8])
         st.plotly_chart(fig, use_container_width=True)
 
+    sec("📉", "Trajektori IP per semester per status mahasiswa", C_RED)
+    traj = (khs_x.groupby(["semester", "status_mahasiswa"])["ip_semester"]
+            .mean().reset_index())
+    fig = px.line(traj, x="semester", y="ip_semester", color="status_mahasiswa",
+                  markers=True, labels={"semester": "Semester",
+                                        "ip_semester": "Rata-rata IP",
+                                        "status_mahasiswa": "Status"},
+                  color_discrete_map={"Lulus": C_GREEN, "Aktif": C_BLUE,
+                                      "Cuti": C_AMBER, "Drop Out": C_RED})
+    fig.update_traces(line=dict(width=3.5), marker=dict(size=8))
+    polish(fig, legend=dict(orientation="h", y=1.15))
+    st.plotly_chart(fig, use_container_width=True)
+
     penjelasan("Cara membaca bagian ini", """
 **Violin plot** = distribusi IPK penuh per jurusan. Lebar "biola" = seberapa
 banyak mahasiswa di rentang IPK itu; garis tengah = median; kotak = rentang
@@ -530,6 +560,11 @@ r positif → nilai rapor memang berkorelasi dengan IPK, meski lemah-sedang
 **Heatmap dropout** menunjukkan kombinasi jurusan × asal sekolah paling
 berisiko. Perhatikan misalnya lulusan MA di prodi teknik — background
 keahlian yang kurang sesuai bisa memperbesar risiko DO.
+
+**Trajektori IP per semester** adalah analisis longitudinal: garis mahasiswa
+**Drop Out menurun tajam sejak semester 1** — mereka tidak "tiba-tiba DO",
+sinyalnya sudah kelihatan jauh sebelumnya. Inilah dasar sistem early-warning:
+flag mahasiswa dengan IP semester 1 < 2,5 untuk pembinaan dini.
 
 ⚠️ **Caveat penting:** korelasi ≠ kausalitas. Dan pada data sintetis, pola
 ini sengaja dimodelkan — di data riil, kekuatan hubungannya bisa beda.

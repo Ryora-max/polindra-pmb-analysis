@@ -74,6 +74,39 @@ FROM mahasiswa
 GROUP BY jurusan, jenis_sekolah
 ORDER BY jurusan, dropout_pct DESC;
 
+-- 8) Efektivitas kanal marketing: pendaftar → registrasi per sumber informasi
+SELECT
+    sumber_informasi,
+    COUNT(*)                                            AS pendaftar,
+    SUM(CASE WHEN status_seleksi = 'Lulus' THEN 1 END)  AS lulus,
+    SUM(CASE WHEN daftar_ulang = 'Ya' THEN 1 END)       AS registrasi,
+    ROUND(100.0 * SUM(CASE WHEN daftar_ulang = 'Ya' THEN 1 END)
+          / COUNT(*), 1)                                AS conversion_pct
+FROM pendaftar
+GROUP BY sumber_informasi
+ORDER BY pendaftar DESC;
+
+-- 9) Tren kanal marketing per tahun (siapa yang makin dominan?)
+SELECT
+    tahun_daftar,
+    sumber_informasi,
+    COUNT(*) AS pendaftar
+FROM pendaftar
+GROUP BY tahun_daftar, sumber_informasi
+ORDER BY tahun_daftar, pendaftar DESC;
+
+-- 10) Trajektori IP per semester per status mahasiswa (JOIN 3 tabel)
+SELECT
+    k.semester,
+    m.status_mahasiswa,
+    COUNT(*)        AS n,
+    ROUND(AVG(k.ip_semester), 2) AS rata_ip,
+    ROUND(AVG(k.sks_ambil), 1)   AS rata_sks
+FROM khs k
+JOIN mahasiswa m ON m.nim = k.nim
+GROUP BY k.semester, m.status_mahasiswa
+ORDER BY k.semester, m.status_mahasiswa;
+
 -- 7) Efektivitas jalur masuk: IPK & dropout per jalur
 SELECT
     jalur_masuk,

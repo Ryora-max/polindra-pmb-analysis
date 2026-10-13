@@ -47,6 +47,25 @@ JALUR_PB = [0.30, 0.42, 0.26, 0.02]
 JALUR_RAPOR = {"SNMPN", "SNBP", "Prestasi"}       # seleksi tanpa ujian tulis
 JALUR_UJIAN = {"SBMPN", "SNBT", "Mandiri"}        # seleksi berbasis tes
 
+# Channel akuisisi pendaftar — tren media sosial naik, jalur tradisional turun
+KANAL = ["TikTok/Instagram", "Guru BK", "Alumni/Keluarga", "Website",
+         "Pameran Kampus", "Teman"]
+def kanal_p(tahun):
+    """Proporsi kanal per tahun — TikTok/IG melesat pasca-2021."""
+    base = {
+        2019: [0.10, 0.28, 0.24, 0.12, 0.16, 0.10],
+        2021: [0.24, 0.24, 0.20, 0.12, 0.10, 0.10],
+        2023: [0.38, 0.18, 0.16, 0.11, 0.08, 0.09],
+        2025: [0.46, 0.14, 0.14, 0.10, 0.06, 0.10],
+    }
+    tahun_keys = sorted(base)
+    lo = max(k for k in tahun_keys if k <= tahun)
+    hi = min(k for k in tahun_keys if k >= tahun)
+    if lo == hi:
+        return base[lo]
+    w = (tahun - lo) / (hi - lo)
+    return [(1 - w) * a + w * b for a, b in zip(base[lo], base[hi])]
+
 # Asal domisili pendaftar — mayoritas Indramayu & Ciayumajakuning
 KOTA = ["Kab. Indramayu", "Kab. Cirebon", "Kota Cirebon", "Kab. Majalengka",
         "Kab. Kuningan", "Kab. Subang", "Kab. Sumedang", "Kab. Karawang",
@@ -118,6 +137,7 @@ def buat_pendaftar() -> pd.DataFrame:
                 "jenis_kelamin": jk,
                 "asal_kota": rng.choice(KOTA, p=KOTA_P),
                 "jenis_sekolah": sekolah,
+                "sumber_informasi": rng.choice(KANAL, p=kanal_p(tahun)),
                 "nilai_rapor": round(nilai_rapor, 1),
             })
             pid += 1
@@ -210,7 +230,8 @@ def buat_mahasiswa(df_pendaftar: pd.DataFrame) -> pd.DataFrame:
         if usia >= lulus_min:
             s = rng.choice(["Lulus", "Aktif", "Drop Out"], p=[0.80, 0.14, 0.06])
         elif usia >= 2:
-            s = rng.choice(["Aktif", "Lulus", "Cuti", "Drop Out"], p=[0.72, 0.14, 0.06, 0.08])
+            # belum bisa lulus — masa studi minimum belum tercapai
+            s = rng.choice(["Aktif", "Cuti", "Drop Out"], p=[0.84, 0.07, 0.09])
         else:
             s = rng.choice(["Aktif", "Cuti", "Drop Out"], p=[0.88, 0.05, 0.07])
         status.append(s)
@@ -230,15 +251,51 @@ def buat_mahasiswa(df_pendaftar: pd.DataFrame) -> pd.DataFrame:
     return m[cols]
 
 
+def buat_khs(df_m: pd.DataFrame) -> pd.DataFrame:
+    """IP per semester tiap mahasiswa — data longitudinal.
+
+    Pola realistis:
+    - Lulus   : IP naik tipis, selesai full jenjang (6 smt D3 / 8 smt S1T)
+    - Drop Out: IP menurun tajam lalu berhenti (semester 1-4)
+    - Aktif/Cuti: berfluktuasi di sekitar IPK akhir
+    """
+    rows = []
+    for _, r in df_m.iterrows():
+        usia = 2025 - r["angkatan"]
+        jenjang_max = 6 if PRODI[r["prodi"]][0] == "D3" else 8
+        n_sem = int(min(max(usia * 2, 1), jenjang_max))
+        st = r["status_mahasiswa"]
+        if st == "Drop Out":
+            n_sem = int(rng.integers(1, min(4, n_sem) + 1))
+            trend = np.linspace(r["ipk"] + 0.45, max(r["ipk"], 1.0), n_sem)
+        elif st == "Lulus":
+            trend = np.linspace(r["ipk"] - 0.15, r["ipk"] + 0.12, n_sem)
+        else:
+            trend = np.full(n_sem, r["ipk"])
+        ip_s = np.clip(trend + rng.normal(0, 0.12, n_sem), 0.5, 4.0)
+        for s, v in enumerate(ip_s, 1):
+            rows.append({
+                "nim": r["nim"],
+                "semester": s,
+                "ip_semester": round(float(v), 2),
+                "sks_ambil": int(rng.integers(15, 25)) if st == "Drop Out"
+                else int(rng.integers(18, 25)),
+            })
+    return pd.DataFrame(rows)
+
+
 if __name__ == "__main__":
     pendaftar = buat_pendaftar()
     mahasiswa = buat_mahasiswa(pendaftar)
+    khs = buat_khs(mahasiswa)
 
     pendaftar.to_csv("data/raw/pendaftar.csv", index=False)
     mahasiswa.to_csv("data/raw/mahasiswa.csv", index=False)
+    khs.to_csv("data/raw/khs.csv", index=False)
 
     print(f"pendaftar.csv : {len(pendaftar):,} baris x {pendaftar.shape[1]} kolom")
     print(f"mahasiswa.csv : {len(mahasiswa):,} baris x {mahasiswa.shape[1]} kolom")
+    print(f"khs.csv       : {len(khs):,} baris x {khs.shape[1]} kolom")
     print("\nContoh pendaftar:")
     print(pendaftar.head(3).to_string())
     print("\nDistribusi status seleksi:")

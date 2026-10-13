@@ -21,6 +21,7 @@ Satu baris = satu calon mahasiswa yang mendaftar.
 | `jenis_kelamin` | kategori | `L`/`P`. Proporsi per jurusan: TI 62% L, Teknik 85% L, Kesehatan 80% P. |
 | `asal_kota` | kategori | Domisili. Indramayu 34%, sisanya Ciayumajakuning & sekitarnya. |
 | `jenis_sekolah` | kategori | SMA / SMK / MA / Lainnya. SMK dominan di teknik (~55–60%), SMA/MA dominan di Kesehatan (~93%). |
+| `sumber_informasi` | kategori | Kanal akuisisi: TikTok/IG (naik 10%→46%), Guru BK, Alumni/Keluarga, Website, Pameran Kampus, Teman. Tren per tahun berubah realistis. |
 | `nilai_rapor` | float | Rerata rapor, distribusi normal μ=80, σ=5, rentang 65–98. |
 | `nilai_ujian` | float | Hanya ada di jalur berbasis tes (SBMPN, SNBT, Mandiri). `NaN` di jalur rapor (SNMPN, SNBP, Prestasi) = **by design**, bukan data kotor. |
 | `skor_seleksi` | float | `0.6×rapor + 0.4×ujian` (+3 bonus SMK di teknik, +3 bonus SMA/MA di kesehatan). |
@@ -42,6 +43,17 @@ Satu baris = satu mahasiswa (pendaftar yang lulus + daftar ulang). Relasi: `maha
 | `beasiswa_kip` | kategori | KIP-Kuliah: ~15% dari Indramayu, ~25% dari luar kota (lebih banyak mahasiswa perantau). |
 | `ipk` | float | Normal per jurusan: TI μ=3.35, Teknik μ=3.15, Kesehatan μ=3.45. Bonus +0.08 penerima KIP, +0.05 jalur rapor (SNMPN/SNBP); lulusan tepat waktu +0.15; Drop Out −0.6. |
 | `status_mahasiswa` | kategori | `Lulus` / `Aktif` / `Cuti` / `Drop Out`. Bergantung usia angkatan: cohort ≥3(D3)/≥4(S1T) tahun dominan Lulus; DO terkonsentrasi di 2 tahun pertama. |
+
+## Tabel 3: `khs` — Transkrip per Semester (longitudinal)
+
+Satu baris = satu semester mahasiswa. Relasi: `khs.nim → mahasiswa.nim`.
+
+| Kolom | Tipe | Penjelasan |
+|---|---|---|
+| `nim` | string | Foreign key ke tabel mahasiswa. |
+| `semester` | int | Semester ke-1..6 (D3) atau 1..8 (S1T); DO berhenti di smt 1–4. |
+| `ip_semester` | float | Indeks prestasi semester tsb. Lulus: naik tipis. DO: menurun tajam. Aktif/Cuti: fluktuatif di sekitar IPK. |
+| `sks_ambil` | int | SKS diambil semester itu (18–24; DO cenderung lebih rendah). |
 
 ## Referensi Prodi (struktur riil Polindra)
 

@@ -9,11 +9,13 @@ def main():
 
     pendaftar = pd.read_csv("data/raw/pendaftar.csv")
     mahasiswa = pd.read_csv("data/raw/mahasiswa.csv")
+    khs = pd.read_csv("data/raw/khs.csv")
 
     pendaftar.to_sql("pendaftar", conn, if_exists="replace", index=False)
     mahasiswa.to_sql("mahasiswa", conn, if_exists="replace", index=False)
+    khs.to_sql("khs", conn, if_exists="replace", index=False)
 
-    for t in ("pendaftar", "mahasiswa"):
+    for t in ("pendaftar", "mahasiswa", "khs"):
         n = pd.read_sql(f"SELECT COUNT(*) AS n FROM {t}", conn)["n"][0]
         print(f"Tabel {t}: {n:,} baris")
 

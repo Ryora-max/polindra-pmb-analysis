@@ -14,12 +14,13 @@ def check(nama, kondisi, detail=""):
 
 pendaftar = pd.read_csv("data/raw/pendaftar.csv")
 mahasiswa = pd.read_csv("data/raw/mahasiswa.csv")
+khs = pd.read_csv("data/raw/khs.csv")
 
 print("== Struktur & kelengkapan ==")
 check("id_pendaftar unik", pendaftar["id_pendaftar"].is_unique)
 check("nim unik", mahasiswa["nim"].is_unique)
 kolom_wajib = ["id_pendaftar", "tahun_daftar", "jalur_masuk", "prodi_pilihan_1",
-               "jurusan", "status_seleksi", "daftar_ulang"]
+               "jurusan", "status_seleksi", "daftar_ulang", "sumber_informasi"]
 check("tidak ada null di kolom wajib pendaftar",
       not pendaftar[kolom_wajib].isna().any().any())
 check("tidak ada null di tabel mahasiswa", not mahasiswa.isna().any().any())
@@ -63,6 +64,19 @@ check("era jalur benar (SNMPN/SBMPN <=2023, SNBP/SNBT >=2024)",
        .isin(["SNMPN", "SBMPN", "Mandiri", "Prestasi"]).all())
       and (pendaftar.loc[pendaftar["tahun_daftar"] >= 2024, "jalur_masuk"]
            .isin(["SNBP", "SNBT", "Mandiri", "Prestasi"]).all()))
+
+print("\n== Tabel khs (longitudinal) ==")
+check("semua NIM khs ada di mahasiswa", khs["nim"].isin(mahasiswa["nim"]).all())
+check("ip_semester 0-4", khs["ip_semester"].between(0, 4).all())
+check("semester >= 1", (khs["semester"] >= 1).all())
+check("sks_ambil 10-24", khs["sks_ambil"].between(10, 24).all())
+check("tidak ada duplikat nim+semester",
+      not khs.duplicated(["nim", "semester"]).any())
+# mahasiswa lulus harus punya semester lengkap
+m_lulus = mahasiswa[mahasiswa["status_mahasiswa"] == "Lulus"]
+sem_lulus = khs[khs["nim"].isin(m_lulus["nim"])].groupby("nim").size()
+check("lulusan punya >=6 semester",
+      (sem_lulus >= 6).all(), f"min={sem_lulus.min()}")
 
 print(f"\n{'='*40}")
 if FAIL:

@@ -20,10 +20,10 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 ## Struktur Project
 
 ```
-├── data/raw/              # Dataset CSV (pendaftar, mahasiswa)
+├── data/raw/              # Dataset CSV (pendaftar, mahasiswa, khs)
 ├── database/
-│   ├── polindra.db        # SQLite — 2 tabel relasional (JOIN by id_pendaftar)
-│   └── queries.sql        # Kumpulan query analisis (tren, funnel, retensi)
+│   ├── polindra.db        # SQLite — 3 tabel relasional (pendaftar→mahasiswa→khs)
+│   └── queries.sql        # 10 query analisis (tren, funnel, retensi, kanal, trajektori)
 ├── notebooks/
 │   ├── 01_analisis_pmb_polindra.ipynb        # EDA lengkap + insight bisnis
 │   └── 02_statistik_dan_model_dropout.ipynb  # uji hipotesis + regresi logistik
@@ -45,8 +45,9 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 
 | Tabel | Baris | Isi |
 |---|---|---|
-| `pendaftar` | ~17.900 | funnel: jalur masuk, pilihan prodi, demografi, skor seleksi, status |
+| `pendaftar` | ~17.900 | funnel: jalur masuk, kanal akuisisi, pilihan prodi, demografi, skor, status |
 | `mahasiswa` | ~6.300 | subset yang registrasi: NIM, angkatan, prodi, IPK, status akademik |
+| `khs` | ~27.000 | IP + SKS per semester per mahasiswa — analisis longitudinal |
 
 Mencakup 11 prodi riil Polindra (3 jurusan: Teknik Informatika, Teknik,
 Kesehatan), jalur masuk yang meniru kebijakan nyata — **SNMPN/SBMPN/Mandiri/
