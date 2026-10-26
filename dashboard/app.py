@@ -23,95 +23,89 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ---- Vibrant modern palette ----
-C_BLUE, C_CYAN, C_TEAL = "#3B82F6", "#06B6D4", "#14B8A6"
-C_GREEN, C_AMBER, C_ORANGE = "#22C55E", "#F59E0B", "#F97316"
-C_PINK, C_PURPLE, C_RED = "#EC4899", "#8B5CF6", "#EF4444"
-PALETTE = [C_BLUE, C_CYAN, C_GREEN, C_AMBER, C_PINK, C_PURPLE, C_ORANGE, C_TEAL]
-JURUSAN_COLOR = {"Teknik Informatika": C_PURPLE, "Teknik": C_CYAN,
-                 "Kesehatan": C_PINK}
+# ---- Clean minimal palette: satu aksen biru + netral ----
+# Warna hanya dipakai saat bermakna (merah=risiko, hijau=positif, amber=perhatian)
+C_BLUE, C_CYAN, C_TEAL = "#2563EB", "#0E7490", "#0F766E"
+C_GREEN, C_AMBER, C_ORANGE = "#16A34A", "#D97706", "#475569"
+C_PINK, C_PURPLE, C_RED = "#B05A78", "#1E40AF", "#DC2626"
+PALETTE = ["#2563EB", "#94A3B8", "#0E7490", "#475569",
+           "#1E40AF", "#A5B4FC", "#64748B", "#CBD5E1"]
+JURUSAN_COLOR = {"Teknik Informatika": "#1E40AF", "Teknik": "#0E7490",
+                 "Kesehatan": "#64748B"}
 
 st.markdown("""
 <style>
-    .block-container {padding-top: 0rem; padding-bottom: 2rem; max-width: 1280px;}
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg,#312E81 0%,#4C1D95 55%,#701A75 100%);}
-    [data-testid="stSidebar"] * {color: #F1EEFF !important;}
+    .block-container {padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1280px;}
+    [data-testid="stSidebar"] {background: #F8FAFC;}
+    [data-testid="stSidebar"] * {color: #334155 !important;}
     [data-testid="stSidebar"] .stMultiSelect label {font-weight: 600;}
 
-    /* ---------- Hero ---------- */
+    /* ---------- Header ---------- */
     .hero {
-        background: linear-gradient(115deg, #4F46E5 0%, #7C3AED 38%,
-                    #DB2777 75%, #F59E0B 120%);
-        border-radius: 20px;
-        padding: 2.3rem 2.4rem 1.9rem 2.4rem;
-        margin: 1rem 0 1.5rem 0;
-        color: white;
-        box-shadow: 0 14px 34px rgba(124,58,237,.28);
-        position: relative; overflow: hidden;
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-left: 5px solid #2563EB;
+        border-radius: 12px;
+        padding: 1.4rem 1.6rem;
+        margin: 0 0 1.4rem 0;
+        color: #1F2937;
     }
-    .hero::after {
-        content:""; position:absolute; right:-70px; top:-70px;
-        width:230px; height:230px; border-radius:50%;
-        background: rgba(255,255,255,.14);
-    }
-    .hero::before {
-        content:""; position:absolute; right:60px; bottom:-90px;
-        width:170px; height:170px; border-radius:50%;
-        background: rgba(255,255,255,.10);
-    }
-    .hero h1 {margin: 0; font-size: 2rem; font-weight: 900; letter-spacing:.3px;}
-    .hero p  {margin: .55rem 0 0 0; font-size: 1rem; opacity: .93;}
+    .hero h1 {margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing:.2px;}
+    .hero p  {margin: .35rem 0 0 0; font-size: .95rem; color: #64748B;}
 
-    /* ---------- Gradient KPI tiles ---------- */
+    /* ---------- KPI cards ---------- */
     .kpi {
-        border-radius: 16px;
-        padding: 1.1rem 1.2rem 1rem 1.2rem;
-        box-shadow: 0 6px 18px rgba(30,34,53,.12);
-        height: 100%; color: white;
-        position: relative; overflow: hidden;
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-top: 3px solid #2563EB;
+        border-radius: 10px;
+        padding: 1rem 1.1rem .9rem 1.1rem;
+        height: 100%;
     }
-    .kpi::after {content:""; position:absolute; right:-30px; top:-30px;
-        width:90px; height:90px; border-radius:50%;
-        background: rgba(255,255,255,.18);}
-    .kpi .label {font-size: .76rem; font-weight: 700; opacity:.92;
-                 text-transform: uppercase; letter-spacing: .7px;}
-    .kpi .value {font-size: 1.8rem; font-weight: 900; line-height: 1.15;}
-    .kpi .sub   {font-size: .8rem; opacity:.88; margin-top: .15rem;}
+    .kpi .label {font-size: .74rem; font-weight: 700; color:#64748B;
+                 text-transform: uppercase; letter-spacing: .6px;}
+    .kpi .value {font-size: 1.7rem; font-weight: 800; color:#111827; line-height: 1.15;}
+    .kpi .sub   {font-size: .78rem; color:#94A3B8; margin-top: .15rem;}
 
     /* ---------- Section pills & insight boxes ---------- */
     .sec-pill {
-        display:inline-block; font-size:1.05rem; font-weight:800;
-        color:#1E2235; margin:.5rem 0 .3rem 0;
-        padding:.15rem .8rem .15rem 0;
+        display:inline-block; font-size:1.02rem; font-weight:800;
+        color:#1F2937; margin:.6rem 0 .3rem 0;
+        padding-bottom:.2rem; border-bottom:2px solid #E5E7EB;
     }
-    .sec-pill::before {content:"●"; margin-right:.45rem; font-size:.9rem;}
+    .sec-pill::before {content:"●"; margin-right:.45rem; font-size:.85rem;}
     .insight {
-        border-radius: 0 12px 12px 0;
+        border-radius: 0 10px 10px 0;
         padding: .8rem 1rem;
         font-size: .88rem;
         margin: .6rem 0;
+        background: #F8FAFC;
+        border: 1px solid #E5E7EB;
+        border-left: 3px solid;
+        color: #334155;
     }
-    .insight.blue  {background:#EAF2FF; border-left:4px solid #3B82F6; color:#274C8E;}
-    .insight.green {background:#E9F9F0; border-left:4px solid #22C55E; color:#166534;}
-    .insight.amber {background:#FFF6E5; border-left:4px solid #F59E0B; color:#92580A;}
-    .insight b {color: inherit; font-weight:800;}
+    .insight.blue  {border-left-color:#2563EB;}
+    .insight.green {border-left-color:#16A34A;}
+    .insight.amber {border-left-color:#D97706;}
+    .insight b {color:#111827; font-weight:700;}
 
     /* ---------- Tabs ---------- */
-    .stTabs [data-baseweb="tab-list"] {gap: .45rem;}
+    .stTabs [data-baseweb="tab-list"] {gap: .4rem; border-bottom:1px solid #E5E7EB;}
     .stTabs [data-baseweb="tab"] {
-        background: #ECECF6; border-radius: 10px 10px 0 0;
-        padding: .45rem 1.1rem; font-weight: 700; color: #5A5F7E;
+        background: transparent;
+        padding: .45rem .9rem; font-weight: 600; color: #64748B;
+        border-bottom: 2px solid transparent;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(120deg,#7C3AED,#DB2777) !important;
-        color: white !important;
+        background: transparent !important;
+        color: #2563EB !important;
+        border-bottom: 2px solid #2563EB !important;
     }
 
-    [data-testid="stExpander"] {background: #FFFFFF; border-radius: 12px;
-        border: 1px solid #E6E8F2;}
-    [data-testid="stDataFrame"] {border-radius: 12px; overflow:hidden;
-        border:1px solid #E6E8F2;}
+    [data-testid="stExpander"] {background: #FFFFFF; border-radius: 10px;
+        border: 1px solid #E5E7EB;}
+    [data-testid="stDataFrame"] {border-radius: 10px; overflow:hidden;
+        border:1px solid #E5E7EB;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -134,17 +128,17 @@ def titik(x):
     return f"{x:,.0f}".replace(",", ".")
 
 BASE_LAYOUT = dict(
-    font=dict(family="Inter, Segoe UI, sans-serif", size=13, color="#1E2235"),
+    font=dict(family="Inter, Segoe UI, sans-serif", size=13, color="#1F2937"),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=10, r=10, t=46, b=10),
-    title=dict(font=dict(size=15, color="#1E2235")),
+    title=dict(font=dict(size=15, color="#1F2937")),
     colorway=PALETTE,
 )
 
 def polish(fig, **kw):
     fig.update_layout(**{**BASE_LAYOUT, **kw})
     fig.update_xaxes(showgrid=False, zeroline=False, automargin=True)
-    fig.update_yaxes(gridcolor="#ECECF6", zeroline=False, automargin=True,
+    fig.update_yaxes(gridcolor="#EEF2F6", zeroline=False, automargin=True,
                      title_standoff=10)
     fig.update_traces(cliponaxis=False, selector=dict(type="bar"))
     fig.update_layout(uniformtext_minsize=9, uniformtext_mode="hide")
@@ -267,25 +261,18 @@ n_pend, n_lulus = len(pend), (pend["status_seleksi"] == "Lulus").sum()
 n_reg = (pend["daftar_ulang"] == "Ya").sum()
 n_do = (mhs["status_mahasiswa"] == "Drop Out").sum()
 
-GRAD = {
-    "blue":   "linear-gradient(135deg,#3B82F6 0%,#2563EB 100%)",
-    "teal":   "linear-gradient(135deg,#14B8A6 0%,#0D9488 100%)",
-    "amber":  "linear-gradient(135deg,#F59E0B 0%,#F97316 100%)",
-    "purple": "linear-gradient(135deg,#8B5CF6 0%,#7C3AED 100%)",
-    "pink":   "linear-gradient(135deg,#EC4899 0%,#EF4444 120%)",
-}
 kpis = [
-    ("📥 Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran", GRAD["blue"]),
-    ("✅ Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar", GRAD["teal"]),
-    ("📝 Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus", GRAD["amber"]),
-    ("📊 Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ","),
-     "mahasiswa terfilter", GRAD["purple"]),
-    ("⚠️ Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
-     f"{titik(n_do)} mahasiswa", GRAD["pink"]),
+    ("Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran"),
+    ("Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar"),
+    ("Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus"),
+    ("Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ","),
+     "mahasiswa terfilter"),
+    ("Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
+     f"{titik(n_do)} mahasiswa"),
 ]
-for col, (label, val, sub, grad) in zip(st.columns(5), kpis):
+for col, (label, val, sub) in zip(st.columns(5), kpis):
     col.markdown(f"""
-    <div class="kpi" style="background:{grad}">
+    <div class="kpi">
         <div class="label">{label}</div>
         <div class="value">{val}</div>
         <div class="sub">{sub}</div>
@@ -329,8 +316,8 @@ with tab1:
             mode="lines+markers+text",
             text=ketat_t["status_seleksi"].map("{:.0f}%".format),
             textposition="top center",
-            line=dict(width=3.5, color=C_PINK), marker=dict(size=10),
-            fill="tozeroy", fillcolor="rgba(236,72,153,.10)"))
+            line=dict(width=3.5, color=C_RED), marker=dict(size=10),
+            fill="tozeroy", fillcolor="rgba(220,38,38,.07)"))
         polish(fig, yaxis_title="% lulus seleksi")
         chart(fig)
 
@@ -340,8 +327,8 @@ with tab1:
             y=["Pendaftar", "Lulus Seleksi", "Daftar Ulang"],
             x=[n_pend, n_lulus, n_reg],
             textinfo="value+percent initial",
-            marker=dict(color=[C_BLUE, C_CYAN, C_AMBER]),
-            connector=dict(line=dict(color="#D6D8F0", width=2))))
+            marker=dict(color=["#1E40AF", "#3B82F6", "#93C5FD"]),
+            connector=dict(line=dict(color="#E5E7EB", width=2))))
         polish(fig)
         chart(fig)
 
@@ -415,7 +402,7 @@ with tab2:
                    .sort_values().reset_index())
         peminat.columns = ["prodi", "peminat"]
         fig = px.bar(peminat, x="peminat", y="prodi", orientation="h",
-                     color="peminat", color_continuous_scale="Viridis",
+                     color="peminat", color_continuous_scale="Blues",
                      text="peminat", labels={"prodi": "", "peminat": "Peminat"})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
@@ -429,7 +416,7 @@ with tab2:
                  .query("n >= 50").nsmallest(10, "acc").sort_values("acc")
                  .reset_index())
         fig = px.bar(ketat, x="acc", y="prodi_pilihan_1", orientation="h",
-                     color="acc", color_continuous_scale="Sunset",
+                     color="acc", color_continuous_scale="Blues",
                      text=ketat["acc"].map("{:.0f}%".format),
                      labels={"acc": "% diterima", "prodi_pilihan_1": ""})
         fig.update_traces(textposition="outside")
@@ -454,7 +441,7 @@ with tab2:
     sec("🗺️", "Peta peminat prodi per tahun", C_TEAL)
     heat = (pend.groupby(["tahun_daftar", "prodi_pilihan_1"]).size()
             .unstack(fill_value=0))
-    fig = px.imshow(heat.T, aspect="auto", color_continuous_scale="Turbo",
+    fig = px.imshow(heat.T, aspect="auto", color_continuous_scale="Blues",
                     labels=dict(x="Tahun", y="", color="Peminat"),
                     text_auto=True)
     polish(fig)
@@ -492,7 +479,7 @@ with tab3:
         sekolah = mhs["jenis_sekolah"].value_counts()
         fig = go.Figure(go.Pie(
             labels=sekolah.index, values=sekolah.values, hole=0.58,
-            marker=dict(colors=[C_TEAL, C_BLUE, C_AMBER, C_PURPLE]),
+            marker=dict(colors=["#2563EB", "#64748B", "#94A3B8", "#CBD5E1"]),
             textinfo="label+percent", textposition="outside"))
         polish(fig, showlegend=False)
         chart(fig)
@@ -501,7 +488,8 @@ with tab3:
         sec("👫", "Gender per jurusan", C_PINK)
         g = mhs.groupby(["jurusan", "jenis_kelamin"]).size().reset_index(name="n")
         fig = px.bar(g, x="n", y="jurusan", color="jenis_kelamin", orientation="h",
-                     barmode="stack", color_discrete_map={"L": C_BLUE, "P": C_PINK},
+                     barmode="stack", color_discrete_map={"L": "#2563EB",
+                                                          "P": "#94A3B8"},
                      labels={"n": "", "jurusan": "", "jenis_kelamin": ""})
         polish(fig, legend=dict(orientation="h", y=1.15))
         chart(fig)
@@ -511,7 +499,7 @@ with tab3:
         kota = mhs["asal_kota"].value_counts().head(10).sort_values().reset_index()
         kota.columns = ["kota", "n"]
         fig = px.bar(kota, x="n", y="kota", orientation="h",
-                     color="n", color_continuous_scale="Emrld",
+                     color="n", color_continuous_scale="Blues",
                      text="n", labels={"kota": "", "n": ""})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
@@ -536,7 +524,7 @@ with tab3:
     # scatter_geo: peta vektor bawaan Plotly — offline, tanpa request tile eksternal
     fig = px.scatter_geo(km, lat="lat", lon="lon", size="n", color="n",
                          hover_name="kota", size_max=42, scope="asia",
-                         color_continuous_scale="Turbo",
+                         color_continuous_scale="Blues",
                          labels={"n": "Mahasiswa"})
     fig.update_geos(visible=False, resolution=50,
                     lataxis_range=[-7.8, -5.6],
@@ -614,7 +602,7 @@ with tab4:
         do_h = (mhs.groupby(["jurusan", "jenis_sekolah"])["status_mahasiswa"]
                 .apply(lambda s: 100 * (s == "Drop Out").mean()).unstack())
         fig = px.imshow(do_h, aspect="auto", text_auto=".1f",
-                        color_continuous_scale="RdYlGn_r",
+                        color_continuous_scale="Reds",
                         labels=dict(x="Jenis sekolah", y="", color="DO %"))
         polish(fig)
         chart(fig)
@@ -637,7 +625,7 @@ with tab4:
         sec("⭐", "Rata-rata IPK per prodi", C_AMBER)
         ipk_p = mhs.groupby("prodi")["ipk"].mean().sort_values().reset_index()
         fig = px.bar(ipk_p, x="ipk", y="prodi", orientation="h",
-                     color="ipk", color_continuous_scale="Purp",
+                     color="ipk", color_continuous_scale="Blues",
                      text=ipk_p["ipk"].map("{:.2f}".format),
                      labels={"prodi": "", "ipk": ""})
         fig.update_traces(textposition="outside")
@@ -713,7 +701,7 @@ with tab5:
                 x=pd.concat([fut["tahun_daftar"],
                              fut["tahun_daftar"][::-1]]),
                 y=pd.concat([fut["hi"], fut["lo"][::-1]]),
-                fill="toself", fillcolor="rgba(139,92,246,.15)",
+                fill="toself", fillcolor="rgba(37,99,235,.12)",
                 line=dict(width=0), name="Interval 90%", hoverinfo="skip"))
             fig.add_trace(go.Scatter(x=fut["tahun_daftar"], y=fut["pred"],
                                      mode="lines+markers", name="Proyeksi",
@@ -732,7 +720,7 @@ with tab5:
         sec("🤖", "Faktor paling memprediksi dropout (Random Forest)", C_RED)
         auc, imp, y_true, y_prob = train_dropout_model()
         fig = px.bar(imp, x="penting", y="fitur", orientation="h",
-                     color="penting", color_continuous_scale="Sunset",
+                     color="penting", color_continuous_scale="Blues",
                      text=imp["penting"].map("{:.2f}".format),
                      labels={"fitur": "", "penting": "Feature importance"})
         fig.update_traces(textposition="outside")
