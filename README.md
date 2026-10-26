@@ -56,8 +56,8 @@ mengikuti Permendikbudristek 48/2022 — dengan kuota seleksi terpisah per
 jalur, serta demografi Ciayumajakuning (BPS).
 
 Dokumentasi:
-- � [`docs/EXECUTIVE_REPORT.md`](docs/EXECUTIVE_REPORT.md) — laporan eksekutif: temuan → rekomendasi
-- �📖 [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — penjelasan tiap kolom & asumsi pemodelan
+- 📋 [`docs/EXECUTIVE_REPORT.md`](docs/EXECUTIVE_REPORT.md) — laporan eksekutif: temuan → rekomendasi
+- 📖 [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — penjelasan tiap kolom & asumsi pemodelan
 - 🔗 [`docs/SUMBER_DATA.md`](docs/SUMBER_DATA.md) — semua sumber riil: polindra.ac.id, PDDikti, SNPMB, BPS, beserta angka peminat riil SNBT 2025 yang dipakai untuk kalibrasi
 
 ## Cara Menjalankan
@@ -82,22 +82,35 @@ streamlit run dashboard/app.py
 notebooks/01_analisis_pmb_polindra.ipynb
 ```
 
-## Temuan Utama
+## Temuan Utama (fakta → implikasi)
 
-- **Demand naik ~170%** dalam 6 tahun; lonjakan mulai 2022 berbarengan dengan
-  pembukaan prodi S1 Terapan baru (SIKC, Elektro-Medis, Instrumen & Kontrol).
-- **Seleksi makin kompetitif**: persentase lulus seleksi turun dari ~58% (2019)
-  ke ~32% (2025) — peminat tumbuh jauh lebih cepat dari daya tampung.
-- **Prodi Teknik Informatika & Kesehatan paling diminati** — daya tampung sama
-  tetapi peminat jauh lebih besar → tingkat diterima rendah.
-- **Jalur Mandiri punya leakage daftar ulang tertinggi** (~22% lulus tidak jadi
-  registrasi) — peluang perbaikan *yield* via follow-up aktif pendaftar.
-- **Mahasiswa jalur SNMPN mencatat IPK tertinggi** — nilai rapor terbukti
-  prediktor performa akademik yang baik.
-- **Dropout terkonsentrasi di 2 tahun pertama** masa studi — periode kritis
-  untuk program early-warning & mentoring.
-- **Polindra sangat lokal**: mayoritas mahasiswa dari Indramayu &
-  Ciayumajakuning — peluang diversifikasi geografis.
+- **Demand naik ~170%** dalam 6 tahun, dipicu pembukaan prodi S1 Terapan
+  (2022+) → daya tampung belum mengejar; **keketatan turun dari ~58% ke ~32%**
+  — masalah utama bukan lagi "kurang peminat" tapi *over-subscription*.
+- **Prodi Teknik Informatika & Kesehatan paling diminati** dengan tingkat
+  diterima terendah → kandidat kuat untuk ekspansi kuota/prodi baru.
+- **Jalur Mandiri: leakage daftar ulang ~22%** (lulus tapi tak registrasi) →
+  *low-hanging fruit*: follow-up aktif pendaftar lulus-mandiri lebih murah
+  daripada menambah pendaftar baru.
+- **SNMPN menghasilkan IPK tertinggi; efek jalur masuk signifikan
+  (ANOVA p<0.001) tapi Cohen's d kecil** → nilai rapor prediktor baik,
+  namun seleksi bukan satu-satunya penentu performa.
+- **Dropout terlihat dari IP semester 1** (trajektori menurun sejak awal,
+  fitur terkuat model RF, AUC 0.65) → sistem *early-warning* layak:
+  flag mahasiswa IP sem-1 <2.5 untuk pembinaan dini.
+- **Polindra sangat lokal** (Indramayu+Ciayumajakuning dominan) →
+  konsentrasi geografis = risiko demografis; ekspansi brand ke luar
+  kawasan adalah tuas pertumbuhan berikutnya.
+
+## Pendekatan analitis (apa yang ditunjukkan project ini)
+
+Deskriptif (funnel, cohort, demografi) → **inferensial** (chi-square,
+ANOVA, effect size — bukan cuma "terlihat beda") → **prediktif**
+(Random Forest + threshold tuning: trade-off recall/precision sebagai
+keputusan bisnis) → **segmentasi** (K-Means persona) → **peramalan**
+(OLS + interval 90%). Semua insight di dashboard dihitung **dinamis
+dari data terfilter** — tidak ada angka hardcode. Kualitas data dijaga
+**23 assertion checks** otomatis.
 
 ## Tech Stack
 

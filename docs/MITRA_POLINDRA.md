@@ -51,8 +51,17 @@
 
 ## Analisis pola jaringan
 
-1. **Dual-helix kuat:** industri lokal (Pertamina Balongan, Daikin, Mitratani) untuk teknik + pemerintah daerah (Pemkab) untuk legitimasi. Ini pola khas politeknik yang tumbuh dari inisiatif daerah.
-2. **Koridor refrigerasi terbentuk:** Daikin (MoU 2026) + Mitratani (MoU 2024) + Shitsudo — tiga mitra HVAC/refrigeration menargetkan prodi D3 TPTU. Ini konsentrasi mitra paling fokus di satu prodi.
-3. **Jalur internasional terkonsentrasi Taiwan** — selaras dengan industri manufaktur Taiwan di Jabar (pola TETO/keteknikan).
-4. **Gap ekosistem digital:** mitra IT-nya (Integrasia=IoT, SEVIMA=SIAKAD, Racer=robotika) **tidak ada yang bergerak di ERP/enterprise software** — padahal alumni Polindra sudah jadi staff SAP ERP di Nabati Majalengka. Peluang kerjasama belum tergarap.
-5. **Alumni absorption:** jalur RECARE adalah kanal kerja paling konkret (Freeport, Pusri, PLN Eng.) — politeknik vokasi dengan feeder industri nyata; kesehatan tersalurkan via RSU Fikri Medika.
+### Profil kuantitatif
+- ~16 mitra terverifikasi ✅, ~7 klaim lemah, 5 kategori jaringan
+- Jangkar ganda: Pemkab (legal-struktural) + Pertamina/industri Ciayumajakuning (ekonomis)
+
+### Temuan analitis
+1. **Dual-helix deliberate:** industri lokal untuk relevansi kurikulum + pemerintah daerah untuk legitimasi — pola khas politeknik yang tumbuh dari inisiatif daerah, bukan kebetulan.
+2. **Koridor refrigerasi terfokus:** Daikin (MoU 2026) + Mitratani (MoU 2024) + Shitsudo — tiga mitra HVAC mengarah ke satu prodi (D3 TPTU). Ini menunjukkan strategi *link-and-match per prodi*, bukan MoU generik.
+3. **Jalur internasional terkonsentrasi Taiwan** — selaras dengan industri manufaktur Taiwan di Jabar (pola TETO/keteknikan). Konsentrasi ini efisien tapi rapuh jika relasi bilateral berubah.
+4. **Gap ekosistem digital:** mitra IT (Integrasia=IoT, SEVIMA=SIAKAD, Racer=robotika) **tidak ada yang bergerak di ERP/enterprise software** — padahal alumni Polindra sudah jadi staff SAP ERP di Nabati Majalengka → peluang belum tergarap.
+5. **Alumni absorption = KPI nyata:** jalur RECARE (Freeport, Pusri, PLN Eng.) + RSU Fikri Medika adalah kanal kerja konkret — kualitas jaringan sebaiknya diukur dari *konversi magang → rekrutmen*, bukan jumlah MoU.
+
+### Risiko & rekomendasi analis
+- **Risiko:** ketergantungan Pemkab bersifat struktural-legal (dilindungi status PTN); risiko utama adalah konsentrasi internasional pada satu negara.
+- **Peluang terbuka:** (a) mitra ERP/enterprise software untuk prodi TI — gap jelas & alumni sudah membuktikan demand; (b) konsolidasi data kemitraan jadi *partner scorecard* (MoU aktif, konversi magang→kerja) — saat ini tersebar di rilis berita.
