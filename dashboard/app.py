@@ -226,11 +226,12 @@ def train_dropout_model():
         feats, y, test_size=0.3, random_state=7, stratify=y)
     rf = RandomForestClassifier(n_estimators=200, max_depth=6,
                                 random_state=7, n_jobs=-1).fit(Xtr, ytr)
-    auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
+    prob = rf.predict_proba(Xte)[:, 1]
+    auc = roc_auc_score(yte, prob)
     imp = (pd.Series(rf.feature_importances_, index=feats.columns)
            .nlargest(10).sort_values().reset_index())
     imp.columns = ["fitur", "penting"]
-    return auc, imp
+    return auc, imp, yte.to_numpy(), prob
 
 @st.cache_data
 def segmentasi_mahasiswa():
@@ -729,7 +730,7 @@ with tab5:
                     "tahun di sidebar.")
 
         sec("🤖", "Faktor paling memprediksi dropout (Random Forest)", C_RED)
-        auc, imp = train_dropout_model()
+        auc, imp, y_true, y_prob = train_dropout_model()
         fig = px.bar(imp, x="penting", y="fitur", orientation="h",
                      color="penting", color_continuous_scale="Sunset",
                      text=imp["penting"].map("{:.2f}".format),
@@ -740,6 +741,36 @@ with tab5:
         st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih pada dataset "
                    "penuh (stabil terhadap filter), hanya dari fitur yang tersedia "
                    "di akhir semester 1 (skenario early-warning nyata).")
+
+        sec("🎚️", "Evaluasi model: geser threshold, lihat trade-off", C_AMBER)
+        thr = st.slider("Threshold klasifikasi DO", 0.10, 0.90, 0.50, 0.05,
+                        help="Di atas threshold → diprediksi Drop Out. "
+                             "Turunkan untuk menangkap lebih banyak calon DO "
+                             "(recall naik, tapi false alarm ikut naik).")
+        y_hat = (y_prob >= thr).astype(int)
+        tp = int(((y_hat == 1) & (y_true == 1)).sum())
+        fp = int(((y_hat == 1) & (y_true == 0)).sum())
+        fn = int(((y_hat == 0) & (y_true == 1)).sum())
+        tn = int(((y_hat == 0) & (y_true == 0)).sum())
+        prec = tp / max(tp + fp, 1)
+        rec = tp / max(tp + fn, 1)
+        f1 = 2 * prec * rec / max(prec + rec, 1e-9)
+
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Recall (DO tertangkap)", f"{100*rec:.0f}%")
+        m2.metric("Precision (flag tepat)", f"{100*prec:.0f}%")
+        m3.metric("F1-score", f"{f1:.2f}")
+
+        cm = pd.DataFrame(
+            [[tn, fp], [fn, tp]],
+            index=["Aktual: bukan DO", "Aktual: DO"],
+            columns=["Prediksi: bukan DO", "Prediksi: DO"])
+        fig = px.imshow(cm, text_auto=True, aspect="auto",
+                        color_continuous_scale="Blues",
+                        labels=dict(color="n"))
+        fig.update_layout(height=270)
+        polish(fig, coloraxis_showscale=False)
+        chart(fig)
 
     with c2:
         sec("🧩", "Segmentasi mahasiswa (K-Means, 4 persona)", C_TEAL)
@@ -775,6 +806,13 @@ kuota, dsb.). Dipakai sebagai *baseline* perencanaan daya tampung.
 menentukan dropout?" — pelengkap regresi logistik (notebook 02): logistik
 lebih interpretable (odds ratio), RF menangkap pola non-linier. ROC-AUC
 mengukur kemampuan model membedakan DO vs bukan DO.
+
+**Threshold slider + confusion matrix** menunjukkan trade-off nyata:
+threshold rendah → recall tinggi (hampir semua calon DO ter-flag) tapi
+banyak false alarm (mahasiswa aman ikut ter-flag). Threshold tinggi →
+kebalikannya. Di konteks early-warning, recall biasanya lebih diutamakan —
+lebih baik berlebih membina daripada kecolongan mahasiswa yang DO.
+Ini keputusan *bisnis*, bukan cuma statistik.
 
 **K-Means segmentation** mengelompokkan mahasiswa jadi 4 persona berdasarkan
 nilai rapor, IPK, dan semester tempuh — teknik yang sama dipakai untuk
