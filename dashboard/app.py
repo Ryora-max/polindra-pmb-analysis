@@ -206,6 +206,53 @@ mhs_x = mhs.merge(pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
 khs_x = khs.merge(mhs[["nim", "status_mahasiswa"]], on="nim", how="left")
 
 # ------------------------------------------------------------------ #
+#  Model & segmentasi — dilatih pada dataset PENUH (cached),          #
+#  stabil terhadap perubahan filter sidebar                            #
+# ------------------------------------------------------------------ #
+@st.cache_data
+def train_dropout_model():
+    m_full = mahasiswa.merge(
+        pendaftar[["id_pendaftar", "nilai_rapor"]],
+        on="id_pendaftar", how="left").dropna(subset=["nilai_rapor"])
+    ip1 = khs[khs["semester"] == 1].set_index("nim")["ip_semester"]
+    m_full["ip_semester_1"] = m_full["nim"].map(ip1)
+    m_full = m_full.dropna(subset=["ip_semester_1"])
+    feats = pd.get_dummies(
+        m_full[["nilai_rapor", "ip_semester_1", "jenis_kelamin",
+                "jenis_sekolah", "jurusan", "jalur_masuk",
+                "beasiswa_kip"]], drop_first=True)
+    y = (m_full["status_mahasiswa"] == "Drop Out").astype(int)
+    Xtr, Xte, ytr, yte = train_test_split(
+        feats, y, test_size=0.3, random_state=7, stratify=y)
+    rf = RandomForestClassifier(n_estimators=200, max_depth=6,
+                                random_state=7, n_jobs=-1).fit(Xtr, ytr)
+    auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
+    imp = (pd.Series(rf.feature_importances_, index=feats.columns)
+           .nlargest(10).sort_values().reset_index())
+    imp.columns = ["fitur", "penting"]
+    return auc, imp
+
+@st.cache_data
+def segmentasi_mahasiswa():
+    m_full = mahasiswa.merge(
+        pendaftar[["id_pendaftar", "nilai_rapor"]],
+        on="id_pendaftar", how="left").dropna(subset=["nilai_rapor"])
+    n_sem = khs.groupby("nim")["semester"].max()
+    m_full["semester_tempuh"] = m_full["nim"].map(n_sem)
+    m_full = m_full.dropna(subset=["semester_tempuh"])
+    Xs = StandardScaler().fit_transform(
+        m_full[["nilai_rapor", "ipk", "semester_tempuh"]])
+    m_full["cluster"] = KMeans(n_clusters=4, random_state=7,
+                               n_init=10).fit_predict(Xs)
+    cent = m_full.groupby("cluster")[["nilai_rapor", "ipk"]].mean()
+    order = (cent["nilai_rapor"] + cent["ipk"] * 20).sort_values()
+    nama = ["🟥 Berisiko / Butuh Bimbingan", "🟧 Rata-rata",
+            "🟦 Stabil", "🟩 Bintang / Unggulan"]
+    m_full["persona"] = m_full["cluster"].map(
+        {cid: nama[rank] for rank, cid in enumerate(order.index)})
+    return m_full
+
+# ------------------------------------------------------------------ #
 #  Hero + KPI                                                         #
 # ------------------------------------------------------------------ #
 st.markdown("""
@@ -345,9 +392,15 @@ marketing untuk alokasi budget promosi.
 ⚠️ **Catatan:** data sintetis — polanya dimodelkan realistis, angkanya simulasi.
 """)
 
-    insight_box("Peminat tumbuh <b>~170%</b> dalam 6 tahun — lonjakan 2022 berbarengan "
-                "dibukanya prodi S1 Terapan baru. Keketatan naik: hanya <b>~32%</b> "
-                "pendaftar lulus di 2025 vs ~58% di 2019.", "blue")
+    if len(tren) >= 2:
+        _growth = 100 * (tren["Pendaftar"].iloc[-1] / tren["Pendaftar"].iloc[0] - 1)
+        _lulus_first = 100 * tren["Lulus"].iloc[0] / tren["Pendaftar"].iloc[0]
+        _lulus_last = 100 * tren["Lulus"].iloc[-1] / tren["Pendaftar"].iloc[-1]
+        insight_box(
+            f"Peminat tumbuh <b>{_growth:.0f}%</b> antara {tren['tahun_daftar'].iloc[0]}–"
+            f"{tren['tahun_daftar'].iloc[-1]}. Keketatan naik: lulus seleksi turun dari "
+            f"<b>{_lulus_first:.0f}%</b> ke <b>{_lulus_last:.0f}%</b> — peminat tumbuh "
+            "jauh lebih cepat daripada daya tampung.", "blue")
 
 # ------------------------------------------------------------------ #
 #  TAB 2 — Program studi                                              #
@@ -422,7 +475,8 @@ selisihnya menunjukkan betapa padat persaingan. Pilihan ke-2 yang cerdas
 = prodi dengan peminat moderat tapi daya tampung cukup.
 """)
 
-    insight_box("D3 Keperawatan & D3 Teknik Informatika memimpin peminat — konsisten "
+    _top2 = pend["prodi_pilihan_1"].value_counts().head(2).index.tolist()
+    insight_box(f"<b>{' & '.join(_top2)}</b> memimpin peminat — konsisten "
                 "dengan data riil peminat SNBT 2025 Polindra. Tingkat diterima prodi "
                 "populer jauh lebih rendah → strategi <b>pilihan ke-2</b> jadi penentu.", "amber")
 
@@ -530,7 +584,9 @@ kesehatan didominasi SMA/MA yang sesuai requirement dasar sains.
 teknik mesin/pendingin mayoritas laki-laki, keperawatan mayoritas perempuan.
 """)
 
-    insight_box("<b>Kab. Indramayu sendirian menyumbang ~1/3 mahasiswa</b> — Polindra sangat "
+    _top_kota = kt.iloc[0]
+    insight_box(f"<b>{_top_kota['Kota asal']} sendirian menyumbang "
+                f"{_top_kota['%']:.0f}% mahasiswa</b> — Polindra sangat "
                 "lokal. Teknik didominasi lulusan SMK + laki-laki; Kesehatan didominasi "
                 "SMA/MA + perempuan. Peluang besar: ekspansi brand ke luar Ciayumajakuning.", "green")
 
@@ -543,12 +599,11 @@ with tab4:
     with c1:
         sec("🎻", "Distribusi IPK per jurusan", C_BLUE)
         fig = go.Figure()
-        colors_j = dict(zip(sorted(mhs["jurusan"].unique()),
-                            [C_BLUE, C_PINK, C_TEAL]))
         for jur, sub in mhs.groupby("jurusan"):
+            warna = JURUSAN_COLOR.get(jur, C_BLUE)
             fig.add_trace(go.Violin(
-                x=sub["ipk"], name=jur, line_color=colors_j[jur],
-                fillcolor=colors_j[jur], opacity=0.55, meanline_visible=True,
+                x=sub["ipk"], name=jur, line_color=warna,
+                fillcolor=warna, opacity=0.55, meanline_visible=True,
                 orientation="h", box_visible=True))
         polish(fig, showlegend=False)
         fig.update_xaxes(range=[0.8, 4.1], title="IPK")
@@ -674,84 +729,41 @@ with tab5:
                     "tahun di sidebar.")
 
         sec("🤖", "Faktor paling memprediksi dropout (Random Forest)", C_RED)
-        df_m = mhs_x.dropna(subset=["nilai_rapor"]).copy()
-        df_m["do"] = (df_m["status_mahasiswa"] == "Drop Out").astype(int)
-        # fitur yang tersedia di akhir semester 1 — skenario early-warning nyata
-        ip_smt1 = khs[khs["semester"] == 1].set_index("nim")["ip_semester"]
-        df_m["ip_semester_1"] = df_m["nim"].map(ip_smt1)
-        df_m = df_m.dropna(subset=["ip_semester_1"])
-        if len(df_m) >= 100 and df_m["do"].nunique() == 2:
-            feats = pd.get_dummies(
-                df_m[["nilai_rapor", "ip_semester_1", "jenis_kelamin",
-                      "jenis_sekolah", "jurusan", "jalur_masuk",
-                      "beasiswa_kip"]], drop_first=True)
-            Xtr, Xte, ytr, yte = train_test_split(
-                feats, df_m["do"], test_size=0.3, random_state=7,
-                stratify=df_m["do"])
-            rf = RandomForestClassifier(n_estimators=200, max_depth=6,
-                                        random_state=7, n_jobs=-1)
-            rf.fit(Xtr, ytr)
-            auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
-            imp = (pd.Series(rf.feature_importances_, index=feats.columns)
-                   .nlargest(10).sort_values().reset_index())
-            imp.columns = ["fitur", "penting"]
-            fig = px.bar(imp, x="penting", y="fitur", orientation="h",
-                         color="penting", color_continuous_scale="Sunset",
-                         text=imp["penting"].map("{:.2f}".format),
-                         labels={"fitur": "", "penting": "Feature importance"})
-            fig.update_traces(textposition="outside")
-            polish(fig, coloraxis_showscale=False)
-            chart(fig)
-            st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih hanya dari "
-                       "fitur yang tersedia di akhir semester 1 (skenario "
-                       "early-warning nyata). Semester-1 IP biasanya prediktor terkuat.")
-        else:
-            st.info("Data terfilter terlalu kecil untuk melatih model — "
-                    "perluas filter di sidebar.")
+        auc, imp = train_dropout_model()
+        fig = px.bar(imp, x="penting", y="fitur", orientation="h",
+                     color="penting", color_continuous_scale="Sunset",
+                     text=imp["penting"].map("{:.2f}".format),
+                     labels={"fitur": "", "penting": "Feature importance"})
+        fig.update_traces(textposition="outside")
+        polish(fig, coloraxis_showscale=False)
+        chart(fig)
+        st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih pada dataset "
+                   "penuh (stabil terhadap filter), hanya dari fitur yang tersedia "
+                   "di akhir semester 1 (skenario early-warning nyata).")
 
     with c2:
         sec("🧩", "Segmentasi mahasiswa (K-Means, 4 persona)", C_TEAL)
-        seg = mhs_x.dropna(subset=["nilai_rapor"]).copy()
-        n_sem = khs_x.groupby("nim")["semester"].max()
-        seg["semester_tempuh"] = seg["nim"].map(n_sem)
-        seg = seg.dropna(subset=["semester_tempuh"])
-        if len(seg) >= 8:
-            n_k = min(4, len(seg))
-            Xs = StandardScaler().fit_transform(
-                seg[["nilai_rapor", "ipk", "semester_tempuh"]])
-            seg["cluster"] = KMeans(n_clusters=n_k, random_state=7,
-                                    n_init=10).fit_predict(Xs)
-            cent = seg.groupby("cluster")[["nilai_rapor", "ipk"]].mean()
-            order = (cent["nilai_rapor"] + cent["ipk"] * 20).sort_values()
-            nama = ["🟥 Berisiko / Butuh Bimbingan", "🟧 Rata-rata",
-                    "🟦 Stabil", "🟩 Bintang / Unggulan"]
-            persona_map = {cid: nama[rank] if n_k == 4 else f"Segmen {rank+1}"
-                           for rank, cid in enumerate(order.index)}
-            seg["persona"] = seg["cluster"].map(persona_map)
+        seg = segmentasi_mahasiswa()
+        fig = px.scatter(seg.sample(min(2200, len(seg)), random_state=7),
+                         x="nilai_rapor", y="ipk", color="persona",
+                         opacity=0.55,
+                         color_discrete_map={"🟩 Bintang / Unggulan": C_GREEN,
+                                             "🟦 Stabil": C_BLUE,
+                                             "🟧 Rata-rata": C_AMBER,
+                                             "🟥 Berisiko / Butuh Bimbingan": C_RED},
+                         labels={"nilai_rapor": "Nilai rapor saat masuk",
+                                 "ipk": "IPK saat ini", "persona": ""})
+        polish(fig, legend=dict(orientation="h", y=1.16))
+        chart(fig)
 
-            fig = px.scatter(seg.sample(min(2200, len(seg)), random_state=7),
-                             x="nilai_rapor", y="ipk", color="persona",
-                             opacity=0.55,
-                             color_discrete_map={"🟩 Bintang / Unggulan": C_GREEN,
-                                                 "🟦 Stabil": C_BLUE,
-                                                 "🟧 Rata-rata": C_AMBER,
-                                                 "🟥 Berisiko / Butuh Bimbingan": C_RED},
-                             labels={"nilai_rapor": "Nilai rapor saat masuk",
-                                     "ipk": "IPK saat ini", "persona": ""})
-            polish(fig, legend=dict(orientation="h", y=1.16))
-            chart(fig)
-
-            prof = (seg.groupby("persona")
-                    .agg(n=("nim", "count"), rapor=("nilai_rapor", "mean"),
-                         ipk=("ipk", "mean"),
-                         do_pct=("status_mahasiswa",
-                                 lambda s: 100 * (s == "Drop Out").mean()))
-                    .round(2).reset_index())
-            prof.columns = ["Persona", "Jumlah", "Rata rapor", "Rata IPK", "% DO"]
-            table(prof)
-        else:
-            st.info("Data terfilter terlalu kecil untuk segmentasi — "
-                    "perluas filter di sidebar.")
+        prof = (seg.groupby("persona")
+                .agg(n=("nim", "count"), rapor=("nilai_rapor", "mean"),
+                     ipk=("ipk", "mean"),
+                     do_pct=("status_mahasiswa",
+                             lambda s: 100 * (s == "Drop Out").mean()))
+                .round(2).reset_index())
+        prof.columns = ["Persona", "Jumlah", "Rata rapor", "Rata IPK", "% DO"]
+        table(prof)
 
     penjelasan("Cara membaca bagian ini", """
 **Forecast (OLS + interval 90%)** memproyeksikan tren historis ke depan.

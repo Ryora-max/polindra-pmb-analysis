@@ -44,12 +44,15 @@ berisiko dropout pada 2 tahun pertama studi.
 
 ## Metodologi Singkat
 
-- **Data**: 17.900 pendaftar + 6.268 mahasiswa (2 tabel relasional, SQLite).
+- **Data**: 17.900 pendaftar + 6.278 mahasiswa + 27.013 baris KHS
+  (3 tabel relasional, SQLite).
 - **Analisis**: funnel & cohort analysis (deskriptif), chi-square + Cramér's V,
   ANOVA, Mann-Whitney, korelasi Pearson/Spearman (inferensial), regresi
-  logistik untuk faktor risiko dropout (pemodelan), validasi lift per desil.
-- **Tools**: Python (pandas, scipy, statsmodels), SQL, Streamlit, Plotly.
-- **Reproducibility**: generator ber-seed, validator data 17 checks, seluruh
+  logistik untuk faktor risiko dropout + Random Forest (pemodelan), K-Means
+  segmentasi, forecast OLS, validasi lift per desil.
+- **Tools**: Python (pandas, scipy, statsmodels, scikit-learn), SQL,
+  Streamlit, Plotly.
+- **Reproducibility**: generator ber-seed, validator data 23 checks, seluruh
   notebook ter-execute.
 
 ## Keterbatasan & Disclaimer
