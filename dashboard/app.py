@@ -2,7 +2,6 @@
 Dashboard Analisis PMB Politeknik Negeri Indramayu.
 Jalankan:  streamlit run dashboard/app.py
 """
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -15,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # ------------------------------------------------------------------ #
-#  Page config & theme                                                #
+#  Page config                                                        #
 # ------------------------------------------------------------------ #
 st.set_page_config(
     page_title="PMB Polindra Analytics",
@@ -29,6 +28,8 @@ C_BLUE, C_CYAN, C_TEAL = "#3B82F6", "#06B6D4", "#14B8A6"
 C_GREEN, C_AMBER, C_ORANGE = "#22C55E", "#F59E0B", "#F97316"
 C_PINK, C_PURPLE, C_RED = "#EC4899", "#8B5CF6", "#EF4444"
 PALETTE = [C_BLUE, C_CYAN, C_GREEN, C_AMBER, C_PINK, C_PURPLE, C_ORANGE, C_TEAL]
+JURUSAN_COLOR = {"Teknik Informatika": C_PURPLE, "Teknik": C_CYAN,
+                 "Kesehatan": C_PINK}
 
 st.markdown("""
 <style>
@@ -84,9 +85,7 @@ st.markdown("""
         color:#1E2235; margin:.5rem 0 .3rem 0;
         padding:.15rem .8rem .15rem 0;
     }
-    .sec-pill::before {
-        content:"●"; margin-right:.45rem; font-size:.9rem;
-    }
+    .sec-pill::before {content:"●"; margin-right:.45rem; font-size:.9rem;}
     .insight {
         border-radius: 0 12px 12px 0;
         padding: .8rem 1rem;
@@ -127,6 +126,9 @@ def load_data():
 
 pendaftar, mahasiswa, khs = load_data()
 
+# ------------------------------------------------------------------ #
+#  Helpers                                                            #
+# ------------------------------------------------------------------ #
 def titik(x):
     """Format ribuan ala Indonesia: 17900 -> '17.900'."""
     return f"{x:,.0f}".replace(",", ".")
@@ -141,15 +143,18 @@ BASE_LAYOUT = dict(
 
 def polish(fig, **kw):
     fig.update_layout(**{**BASE_LAYOUT, **kw})
-    # automargin: sumbu otomatis melebar agar label panjang tidak terpotong
     fig.update_xaxes(showgrid=False, zeroline=False, automargin=True)
     fig.update_yaxes(gridcolor="#ECECF6", zeroline=False, automargin=True,
                      title_standoff=10)
-    # label di ujung bar boleh melampaui area plot (tidak kepotong)
     fig.update_traces(cliponaxis=False, selector=dict(type="bar"))
-    # seragamkan & sembunyikan label terlalu kecil (anti-tumpuk di pie)
     fig.update_layout(uniformtext_minsize=9, uniformtext_mode="hide")
     return fig
+
+def chart(fig):
+    st.plotly_chart(fig, width="stretch")
+
+def table(df, **kw):
+    st.dataframe(df, width="stretch", hide_index=True, **kw)
 
 def insight_box(text, tone="blue"):
     st.markdown(f'<div class="insight {tone}">💡 {text}</div>',
@@ -172,7 +177,8 @@ st.sidebar.markdown("## 🎛️ Filter Data")
 st.sidebar.caption("Semua visual mengikuti filter ini")
 
 tahun_list = sorted(pendaftar["tahun_daftar"].unique())
-tahun_pilih = st.sidebar.multiselect("Tahun Pendaftaran", tahun_list, default=tahun_list)
+tahun_pilih = st.sidebar.multiselect("Tahun Pendaftaran", tahun_list,
+                                     default=tahun_list)
 jurusan_pilih = st.sidebar.multiselect(
     "Jurusan", sorted(pendaftar["jurusan"].unique()),
     default=sorted(pendaftar["jurusan"].unique()))
@@ -190,9 +196,13 @@ mhs = mahasiswa[mahasiswa["angkatan"].isin(tahun_pilih)
                 & mahasiswa["jurusan"].isin(jurusan_pilih)
                 & mahasiswa["jalur_masuk"].isin(jalur_pilih)]
 
-mhs_x = mhs.merge(
-    pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
-    on="id_pendaftar", how="left")
+if pend.empty or mhs.empty:
+    st.warning("Filter menghasilkan data kosong — pilih minimal satu tahun, "
+               "jurusan, dan jalur masuk di sidebar.")
+    st.stop()
+
+mhs_x = mhs.merge(pend[["id_pendaftar", "nilai_rapor", "skor_seleksi"]],
+                  on="id_pendaftar", how="left")
 khs_x = khs.merge(mhs[["nim", "status_mahasiswa"]], on="nim", how="left")
 
 # ------------------------------------------------------------------ #
@@ -220,7 +230,7 @@ kpis = [
     ("📥 Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran", GRAD["blue"]),
     ("✅ Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar", GRAD["teal"]),
     ("📝 Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus", GRAD["amber"]),
-    ("📊 Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ",") if len(mhs) else "-",
+    ("📊 Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ","),
      "mahasiswa terfilter", GRAD["purple"]),
     ("⚠️ Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
      f"{titik(n_do)} mahasiswa", GRAD["pink"]),
@@ -252,14 +262,16 @@ with tab1:
                      Registrasi=("daftar_ulang", lambda s: (s == "Ya").sum()))
                 .reset_index())
         fig = go.Figure()
-        for col, color in [("Pendaftar", C_BLUE), ("Lulus", C_GREEN), ("Registrasi", C_ORANGE)]:
+        for col, color in [("Pendaftar", C_BLUE), ("Lulus", C_GREEN),
+                           ("Registrasi", C_ORANGE)]:
             fig.add_trace(go.Scatter(
-                x=tren["tahun_daftar"], y=tren[col], name=col, mode="lines+markers",
+                x=tren["tahun_daftar"], y=tren[col], name=col,
+                mode="lines+markers",
                 line=dict(width=3.5, color=color), marker=dict(size=9),
                 fill="tozeroy" if col == "Pendaftar" else None,
                 fillcolor="rgba(59,130,246,.10)"))
         polish(fig, legend=dict(orientation="h", y=1.14))
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
         sec("🔥", "Tingkat keketatan seleksi", C_RED)
         ketat_t = (pend.groupby("tahun_daftar")["status_seleksi"]
@@ -272,7 +284,7 @@ with tab1:
             line=dict(width=3.5, color=C_PINK), marker=dict(size=10),
             fill="tozeroy", fillcolor="rgba(236,72,153,.10)"))
         polish(fig, yaxis_title="% lulus seleksi")
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     with c2:
         sec("🧲", "Funnel konversi", C_PURPLE)
@@ -283,7 +295,7 @@ with tab1:
             marker=dict(color=[C_BLUE, C_CYAN, C_AMBER]),
             connector=dict(line=dict(color="#D6D8F0", width=2))))
         polish(fig)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
         sec("🎯", "Conversion per jalur masuk", C_TEAL)
         jalur_f = (pend.groupby("jalur_masuk")
@@ -297,7 +309,7 @@ with tab1:
                      labels={"rate": "", "jalur_masuk": ""})
         fig.update_traces(textposition="outside")
         polish(fig, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     sec("📣", "Kanal akuisisi pendaftar per tahun", C_ORANGE)
     kanal = (pend.groupby(["tahun_daftar", "sumber_informasi"]).size()
@@ -307,7 +319,7 @@ with tab1:
                   labels={"n": "Pendaftar", "tahun_daftar": "Tahun",
                           "sumber_informasi": "Kanal"})
     polish(fig, legend=dict(orientation="h", y=-0.18))
-    st.plotly_chart(fig, use_container_width=True)
+    chart(fig)
 
     penjelasan("Cara membaca bagian ini", """
 **Grafik funnel (atas kiri)** menelusuri perjalanan pendaftar melalui 3 tahap:
@@ -353,36 +365,37 @@ with tab2:
                      text="peminat", labels={"prodi": "", "peminat": "Peminat"})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     with c2:
         sec("🔥", "Prodi paling kompetitif", C_ORANGE)
         ketat = (pend.groupby("prodi_pilihan_1")
                  .agg(n=("id_pendaftar", "count"),
                       acc=("status_seleksi", lambda s: (s == "Lulus").mean() * 100))
-                 .query("n >= 50").nsmallest(10, "acc").sort_values("acc").reset_index())
+                 .query("n >= 50").nsmallest(10, "acc").sort_values("acc")
+                 .reset_index())
         fig = px.bar(ketat, x="acc", y="prodi_pilihan_1", orientation="h",
                      color="acc", color_continuous_scale="Sunset",
                      text=ketat["acc"].map("{:.0f}%".format),
                      labels={"acc": "% diterima", "prodi_pilihan_1": ""})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     sec("🫧", "Peminat vs tingkat diterima (bubble = total pendaftar)", C_PURPLE)
     bubble = (pend.groupby(["prodi_pilihan_1", "jurusan"])
               .agg(peminat=("id_pendaftar", "count"),
-                   diterima_pct=("status_seleksi", lambda s: 100 * (s == "Lulus").mean()))
+                   diterima_pct=("status_seleksi",
+                                 lambda s: 100 * (s == "Lulus").mean()))
               .reset_index())
     fig = px.scatter(bubble, x="peminat", y="diterima_pct", size="peminat",
                      color="jurusan", hover_name="prodi_pilihan_1",
                      size_max=50,
                      labels={"peminat": "Total peminat",
                              "diterima_pct": "% diterima"},
-                     color_discrete_map={"Teknik Informatika": C_PURPLE,
-                                         "Teknik": C_CYAN, "Kesehatan": C_PINK})
+                     color_discrete_map=JURUSAN_COLOR)
     polish(fig)
-    st.plotly_chart(fig, use_container_width=True)
+    chart(fig)
 
     sec("🗺️", "Peta peminat prodi per tahun", C_TEAL)
     heat = (pend.groupby(["tahun_daftar", "prodi_pilihan_1"]).size()
@@ -391,7 +404,7 @@ with tab2:
                     labels=dict(x="Tahun", y="", color="Peminat"),
                     text_auto=True)
     polish(fig)
-    st.plotly_chart(fig, use_container_width=True)
+    chart(fig)
 
     penjelasan("Cara membaca bagian ini", """
 **Bubble chart** adalah ringkasan paling kaya: sumbu-X = jumlah peminat,
@@ -427,7 +440,7 @@ with tab3:
             marker=dict(colors=[C_TEAL, C_BLUE, C_AMBER, C_PURPLE]),
             textinfo="label+percent", textposition="outside"))
         polish(fig, showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     with c2:
         sec("👫", "Gender per jurusan", C_PINK)
@@ -436,7 +449,7 @@ with tab3:
                      barmode="stack", color_discrete_map={"L": C_BLUE, "P": C_PINK},
                      labels={"n": "", "jurusan": "", "jenis_kelamin": ""})
         polish(fig, legend=dict(orientation="h", y=1.15))
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     with c3:
         sec("📍", "Top 10 kota asal mahasiswa", C_GREEN)
@@ -447,12 +460,9 @@ with tab3:
                      text="n", labels={"kota": "", "n": ""})
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
-    st.markdown(
-        '<div class="sec-pill" style="color:#06B6D4">🗺️ '
-        '<span style="color:#1E2235">Peta sebaran domisili</span></div>',
-        unsafe_allow_html=True)
+    sec("🗺️", "Peta sebaran domisili mahasiswa", C_CYAN)
     KOORD = {
         "Kab. Indramayu": (-6.335, 108.319), "Kab. Cirebon": (-6.850, 108.560),
         "Kota Cirebon": (-6.730, 108.552), "Kab. Majalengka": (-6.830, 108.227),
@@ -468,15 +478,20 @@ with tab3:
     km = km[km["kota"].isin(KOORD)].copy()
     km["lat"] = km["kota"].map(lambda k: KOORD[k][0])
     km["lon"] = km["kota"].map(lambda k: KOORD[k][1])
-    fig = px.scatter_map(km, lat="lat", lon="lon", size="n", color="n",
-                         hover_name="kota", size_max=38, zoom=7.2,
-                         center=dict(lat=-6.72, lon=108.28),
-                         map_style="open-street-map",
+    # scatter_geo: peta vektor bawaan Plotly — offline, tanpa request tile eksternal
+    fig = px.scatter_geo(km, lat="lat", lon="lon", size="n", color="n",
+                         hover_name="kota", size_max=42, scope="asia",
                          color_continuous_scale="Turbo",
                          labels={"n": "Mahasiswa"})
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=430,
-                      coloraxis_showscale=False)
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_geos(visible=False, resolution=50,
+                    lataxis_range=[-7.8, -5.6],
+                    lonaxis_range=[105.5, 110.5])
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=400,
+                      coloraxis_showscale=False,
+                      paper_bgcolor="rgba(0,0,0,0)",
+                      font=dict(family="Inter, Segoe UI, sans-serif",
+                                size=13, color="#1E2235"))
+    chart(fig)
 
     c4, c5 = st.columns(2, gap="large")
     with c4:
@@ -485,18 +500,23 @@ with tab3:
         kt.columns = ["Kota asal", "Mahasiswa"]
         kt["%"] = (100 * kt["Mahasiswa"] / len(mhs)).round(1)
         kt["% kumulatif"] = kt["%"].cumsum().round(1)
-        st.dataframe(kt, use_container_width=True, hide_index=True, height=350)
+        table(kt, height=350)
     with c5:
         sec("🧩", "Jalur masuk per jurusan", C_PURPLE)
         jl = (mhs.groupby(["jurusan", "jalur_masuk"]).size()
               .reset_index(name="n"))
         fig = px.bar(jl, x="jurusan", y="n", color="jalur_masuk", barmode="stack",
                      color_discrete_sequence=PALETTE,
-                     labels={"n": "Mahasiswa", "jurusan": "", "jalur_masuk": "Jalur"})
+                     labels={"n": "Mahasiswa", "jurusan": "",
+                             "jalur_masuk": "Jalur"})
         polish(fig, legend=dict(orientation="h", y=1.15))
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     penjelasan("Cara membaca bagian ini", """
+**Peta domisili** menampilkan kota asal sebagai gelembung di peta Jawa —
+gelembung makin besar = makin banyak mahasiswa. Peta ini memakai peta vektor
+bawaan Plotly sehingga tidak memuat tile eksternal.
+
 **Kolom "% kumulatif"** di tabel domisili menunjukkan konsentrasi geografis:
 berapa % total mahasiswa yang tercakup oleh N kota teratas. Jika 3 kota
 teratas sudah mencakup >50%, kampus sangat bergantung pada satu wilayah —
@@ -532,7 +552,7 @@ with tab4:
                 orientation="h", box_visible=True))
         polish(fig, showlegend=False)
         fig.update_xaxes(range=[0.8, 4.1], title="IPK")
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
         sec("🌡️", "Heatmap dropout rate (jurusan × sekolah)", C_RED)
         do_h = (mhs.groupby(["jurusan", "jenis_sekolah"])["status_mahasiswa"]
@@ -541,7 +561,7 @@ with tab4:
                         color_continuous_scale="RdYlGn_r",
                         labels=dict(x="Jenis sekolah", y="", color="DO %"))
         polish(fig)
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     with c2:
         sec("🔬", "Korelasi: nilai rapor masuk → IPK", C_PURPLE)
@@ -552,11 +572,11 @@ with tab4:
                          opacity=0.5, trendline="ols", trendline_scope="overall",
                          labels={"nilai_rapor": "Nilai rapor saat mendaftar",
                                  "ipk": "IPK saat ini", "jurusan": ""},
-                         color_discrete_map={"Teknik Informatika": C_PURPLE,
-                                             "Teknik": C_CYAN, "Kesehatan": C_PINK})
+                         color_discrete_map=JURUSAN_COLOR)
         polish(fig, legend=dict(orientation="h", y=1.15))
-        st.plotly_chart(fig, use_container_width=True)
-        st.caption(f"Korelasi Pearson r = {corr:.2f} — semakin dekat ke ±1 semakin kuat hubungannya")
+        chart(fig)
+        st.caption(f"Korelasi Pearson r = {corr:.2f} — semakin dekat ke ±1 "
+                   "semakin kuat hubungannya")
 
         sec("⭐", "Rata-rata IPK per prodi", C_AMBER)
         ipk_p = mhs.groupby("prodi")["ipk"].mean().sort_values().reset_index()
@@ -567,7 +587,7 @@ with tab4:
         fig.update_traces(textposition="outside")
         polish(fig, coloraxis_showscale=False)
         fig.update_xaxes(range=[2.5, 3.8])
-        st.plotly_chart(fig, use_container_width=True)
+        chart(fig)
 
     sec("📉", "Trajektori IP per semester per status mahasiswa", C_RED)
     traj = (khs_x.groupby(["semester", "status_mahasiswa"])["ip_semester"]
@@ -580,7 +600,7 @@ with tab4:
                                       "Cuti": C_AMBER, "Drop Out": C_RED})
     fig.update_traces(line=dict(width=3.5), marker=dict(size=8))
     polish(fig, legend=dict(orientation="h", y=1.15))
-    st.plotly_chart(fig, use_container_width=True)
+    chart(fig)
 
     penjelasan("Cara membaca bagian ini", """
 **Violin plot** = distribusi IPK penuh per jurusan. Lebar "biola" = seberapa
@@ -619,31 +639,39 @@ with tab5:
     with c1:
         sec("📈", "Proyeksi pendaftar 2026–2028", C_PURPLE)
         tren_f = pend.groupby("tahun_daftar").size().reset_index(name="n")
-        X = sm.add_constant(tren_f["tahun_daftar"])
-        ols = sm.OLS(tren_f["n"], X).fit()
-        fut = pd.DataFrame({"tahun_daftar": [2026, 2027, 2028]})
-        pred = ols.get_prediction(sm.add_constant(fut)).summary_frame(alpha=0.1)
-        fut["pred"], fut["lo"], fut["hi"] = (pred["mean"].round(0).astype(int),
-                                           pred["obs_ci_lower"], pred["obs_ci_upper"])
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=tren_f["tahun_daftar"], y=tren_f["n"],
-                                 mode="lines+markers", name="Aktual",
-                                 line=dict(color=C_BLUE, width=3.5),
-                                 marker=dict(size=9)))
-        fig.add_trace(go.Scatter(
-            x=list(fut["tahun_daftar"]) + list(fut["tahun_daftar"])[::-1],
-            y=list(fut["hi"]) + list(fut["lo"])[::-1], fill="toself",
-            fillcolor="rgba(139,92,246,.15)", line=dict(width=0),
-            name="Interval 90%", hoverinfo="skip"))
-        fig.add_trace(go.Scatter(x=fut["tahun_daftar"], y=fut["pred"],
-                                 mode="lines+markers", name="Proyeksi",
-                                 line=dict(color=C_PURPLE, width=3, dash="dash"),
-                                 marker=dict(size=9, symbol="diamond")))
-        polish(fig, legend=dict(orientation="h", y=1.14),
-               yaxis_title="Pendaftar")
-        st.plotly_chart(fig, use_container_width=True)
-        st.caption("Model: regresi linier OLS pada tren 2019–2025 (filter ikut aktif) "
-                   "— proyeksi berguna sebagai baseline, bukan kepastian.")
+        if len(tren_f) >= 3:
+            X = sm.add_constant(tren_f["tahun_daftar"].astype(float))
+            ols = sm.OLS(tren_f["n"].astype(float), X).fit()
+            fut = pd.DataFrame({"tahun_daftar": [2026., 2027., 2028.]})
+            pred = (ols.get_prediction(sm.add_constant(fut))
+                    .summary_frame(alpha=0.1))
+            fut["pred"] = pred["mean"].round(0).astype(int)
+            fut["lo"], fut["hi"] = pred["obs_ci_lower"], pred["obs_ci_upper"]
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=tren_f["tahun_daftar"], y=tren_f["n"],
+                                     mode="lines+markers", name="Aktual",
+                                     line=dict(color=C_BLUE, width=3.5),
+                                     marker=dict(size=9)))
+            fig.add_trace(go.Scatter(
+                x=pd.concat([fut["tahun_daftar"],
+                             fut["tahun_daftar"][::-1]]),
+                y=pd.concat([fut["hi"], fut["lo"][::-1]]),
+                fill="toself", fillcolor="rgba(139,92,246,.15)",
+                line=dict(width=0), name="Interval 90%", hoverinfo="skip"))
+            fig.add_trace(go.Scatter(x=fut["tahun_daftar"], y=fut["pred"],
+                                     mode="lines+markers", name="Proyeksi",
+                                     line=dict(color=C_PURPLE, width=3,
+                                               dash="dash"),
+                                     marker=dict(size=9, symbol="diamond")))
+            polish(fig, legend=dict(orientation="h", y=1.14),
+                   yaxis_title="Pendaftar")
+            chart(fig)
+            st.caption("Model: regresi linier OLS pada tren historis (filter ikut "
+                       "aktif) — proyeksi berguna sebagai baseline, bukan kepastian.")
+        else:
+            st.info("Butuh minimal 3 tahun data untuk proyeksi — perluas filter "
+                    "tahun di sidebar.")
 
         sec("🤖", "Faktor paling memprediksi dropout (Random Forest)", C_RED)
         df_m = mhs_x.dropna(subset=["nilai_rapor"]).copy()
@@ -652,67 +680,78 @@ with tab5:
         ip_smt1 = khs[khs["semester"] == 1].set_index("nim")["ip_semester"]
         df_m["ip_semester_1"] = df_m["nim"].map(ip_smt1)
         df_m = df_m.dropna(subset=["ip_semester_1"])
-        feats = pd.get_dummies(
-            df_m[["nilai_rapor", "ip_semester_1", "jenis_kelamin", "jenis_sekolah",
-                  "jurusan", "jalur_masuk", "beasiswa_kip"]], drop_first=True)
-        Xtr, Xte, ytr, yte = train_test_split(
-            feats, df_m["do"], test_size=0.3, random_state=7,
-            stratify=df_m["do"])
-        rf = RandomForestClassifier(n_estimators=200, max_depth=6,
-                                    random_state=7, n_jobs=-1)
-        rf.fit(Xtr, ytr)
-        auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
-        imp = (pd.Series(rf.feature_importances_, index=feats.columns)
-               .nlargest(10).sort_values().reset_index())
-        imp.columns = ["fitur", "penting"]
-        fig = px.bar(imp, x="penting", y="fitur", orientation="h",
-                     color="penting", color_continuous_scale="Sunset",
-                     text=imp["penting"].map("{:.2f}".format),
-                     labels={"fitur": "", "penting": "Feature importance"})
-        fig.update_traces(textposition="outside")
-        polish(fig, coloraxis_showscale=False)
-        st.plotly_chart(fig, use_container_width=True)
-        st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih hanya dari fitur "
-                   "yang tersedia di akhir semester 1 (skenario early-warning nyata). "
-                   "Semester-1 IP biasanya prediktor terkuat.")
+        if len(df_m) >= 100 and df_m["do"].nunique() == 2:
+            feats = pd.get_dummies(
+                df_m[["nilai_rapor", "ip_semester_1", "jenis_kelamin",
+                      "jenis_sekolah", "jurusan", "jalur_masuk",
+                      "beasiswa_kip"]], drop_first=True)
+            Xtr, Xte, ytr, yte = train_test_split(
+                feats, df_m["do"], test_size=0.3, random_state=7,
+                stratify=df_m["do"])
+            rf = RandomForestClassifier(n_estimators=200, max_depth=6,
+                                        random_state=7, n_jobs=-1)
+            rf.fit(Xtr, ytr)
+            auc = roc_auc_score(yte, rf.predict_proba(Xte)[:, 1])
+            imp = (pd.Series(rf.feature_importances_, index=feats.columns)
+                   .nlargest(10).sort_values().reset_index())
+            imp.columns = ["fitur", "penting"]
+            fig = px.bar(imp, x="penting", y="fitur", orientation="h",
+                         color="penting", color_continuous_scale="Sunset",
+                         text=imp["penting"].map("{:.2f}".format),
+                         labels={"fitur": "", "penting": "Feature importance"})
+            fig.update_traces(textposition="outside")
+            polish(fig, coloraxis_showscale=False)
+            chart(fig)
+            st.caption(f"ROC-AUC test set: **{auc:.2f}** — model dilatih hanya dari "
+                       "fitur yang tersedia di akhir semester 1 (skenario "
+                       "early-warning nyata). Semester-1 IP biasanya prediktor terkuat.")
+        else:
+            st.info("Data terfilter terlalu kecil untuk melatih model — "
+                    "perluas filter di sidebar.")
 
     with c2:
         sec("🧩", "Segmentasi mahasiswa (K-Means, 4 persona)", C_TEAL)
         seg = mhs_x.dropna(subset=["nilai_rapor"]).copy()
         n_sem = khs_x.groupby("nim")["semester"].max()
         seg["semester_tempuh"] = seg["nim"].map(n_sem)
-        Xs = StandardScaler().fit_transform(
-            seg[["nilai_rapor", "ipk", "semester_tempuh"]])
-        seg["cluster"] = KMeans(n_clusters=4, random_state=7,
-                                n_init=10).fit_predict(Xs)
-        cent = seg.groupby("cluster")[["nilai_rapor", "ipk"]].mean()
-        order = (cent["nilai_rapor"] + cent["ipk"] * 20).sort_values()
-        persona_map = {}
-        for rank, cid in enumerate(order.index):
-            persona_map[cid] = ["🟥 Berisiko / Butuh Bimbingan", "🟧 Rata-rata",
-                                "🟦 Stabil", "🟩 Bintang / Unggulan"][rank]
-        seg["persona"] = seg["cluster"].map(persona_map)
+        seg = seg.dropna(subset=["semester_tempuh"])
+        if len(seg) >= 8:
+            n_k = min(4, len(seg))
+            Xs = StandardScaler().fit_transform(
+                seg[["nilai_rapor", "ipk", "semester_tempuh"]])
+            seg["cluster"] = KMeans(n_clusters=n_k, random_state=7,
+                                    n_init=10).fit_predict(Xs)
+            cent = seg.groupby("cluster")[["nilai_rapor", "ipk"]].mean()
+            order = (cent["nilai_rapor"] + cent["ipk"] * 20).sort_values()
+            nama = ["🟥 Berisiko / Butuh Bimbingan", "🟧 Rata-rata",
+                    "🟦 Stabil", "🟩 Bintang / Unggulan"]
+            persona_map = {cid: nama[rank] if n_k == 4 else f"Segmen {rank+1}"
+                           for rank, cid in enumerate(order.index)}
+            seg["persona"] = seg["cluster"].map(persona_map)
 
-        fig = px.scatter(seg.sample(min(2200, len(seg)), random_state=7),
-                         x="nilai_rapor", y="ipk", color="persona",
-                         opacity=0.55,
-                         color_discrete_map={"🟩 Bintang / Unggulan": C_GREEN,
-                                             "🟦 Stabil": C_BLUE,
-                                             "🟧 Rata-rata": C_AMBER,
-                                             "🟥 Berisiko / Butuh Bimbingan": C_RED},
-                         labels={"nilai_rapor": "Nilai rapor saat masuk",
-                                 "ipk": "IPK saat ini", "persona": ""})
-        polish(fig, legend=dict(orientation="h", y=1.16))
-        st.plotly_chart(fig, use_container_width=True)
+            fig = px.scatter(seg.sample(min(2200, len(seg)), random_state=7),
+                             x="nilai_rapor", y="ipk", color="persona",
+                             opacity=0.55,
+                             color_discrete_map={"🟩 Bintang / Unggulan": C_GREEN,
+                                                 "🟦 Stabil": C_BLUE,
+                                                 "🟧 Rata-rata": C_AMBER,
+                                                 "🟥 Berisiko / Butuh Bimbingan": C_RED},
+                             labels={"nilai_rapor": "Nilai rapor saat masuk",
+                                     "ipk": "IPK saat ini", "persona": ""})
+            polish(fig, legend=dict(orientation="h", y=1.16))
+            chart(fig)
 
-        prof = (seg.groupby("persona")
-                .agg(n=("nim", "count"), rapor=("nilai_rapor", "mean"),
-                     ipk=("ipk", "mean"),
-                     do_pct=("status_mahasiswa",
-                             lambda s: 100 * (s == "Drop Out").mean()))
-                .round(2).reset_index())
-        prof.columns = ["Persona", "Jumlah", "Rata rapor", "Rata IPK", "% DO"]
-        st.dataframe(prof, use_container_width=True, hide_index=True)
+            prof = (seg.groupby("persona")
+                    .agg(n=("nim", "count"), rapor=("nilai_rapor", "mean"),
+                         ipk=("ipk", "mean"),
+                         do_pct=("status_mahasiswa",
+                                 lambda s: 100 * (s == "Drop Out").mean()))
+                    .round(2).reset_index())
+            prof.columns = ["Persona", "Jumlah", "Rata rapor", "Rata IPK", "% DO"]
+            table(prof)
+        else:
+            st.info("Data terfilter terlalu kecil untuk segmentasi — "
+                    "perluas filter di sidebar.")
 
     penjelasan("Cara membaca bagian ini", """
 **Forecast (OLS + interval 90%)** memproyeksikan tren historis ke depan.
@@ -751,67 +790,60 @@ with tab6:
         dims = st.multiselect("Dimensi (group by)", base.columns.tolist(),
                               default=["jurusan"])
     with ec3:
-        metrik = st.selectbox("Metrik", ["Jumlah baris", "Rata-rata skor_seleksi",
+        metrik = st.selectbox("Metrik", ["Jumlah baris",
+                                         "Rata-rata skor_seleksi",
                                          "Rata-rata IPK", "% Drop Out"])
 
     if dims:
         g = base.groupby(dims)
-        if metrik == "Jumlah baris":
+        col_ada = {"Rata-rata skor_seleksi": "skor_seleksi",
+                   "Rata-rata IPK": "ipk",
+                   "% Drop Out": "status_mahasiswa"}
+        need = col_ada.get(metrik)
+        res = None
+        if need is not None and need not in base.columns:
+            st.warning(f"Kolom `{need}` tidak ada di tabel {tabel_pilih}.")
+        elif metrik == "Jumlah baris":
             res = g.size().reset_index(name="jumlah")
-        elif metrik == "Rata-rata skor_seleksi":
-            res = g["skor_seleksi"].mean().round(2).reset_index(
-                name="rata_skor") if "skor_seleksi" in base.columns else None
-            if res is None:
-                st.warning("Kolom skor_seleksi tidak ada di tabel mahasiswa.")
-                res = g.size().reset_index(name="jumlah")
-        elif metrik == "Rata-rata IPK":
-            res = g["ipk"].mean().round(2).reset_index(
-                name="rata_ipk") if "ipk" in base.columns else None
-            if res is None:
-                st.warning("Kolom ipk tidak ada di tabel pendaftar.")
-                res = g.size().reset_index(name="jumlah")
-        else:
+        elif metrik == "% Drop Out":
             res = (g["status_mahasiswa"]
                    .apply(lambda s: round(100 * (s == "Drop Out").mean(), 1))
-                   .reset_index(name="dropout_pct")) \
-                if "status_mahasiswa" in base.columns else \
-                g.size().reset_index(name="jumlah")
-        st.dataframe(res, use_container_width=True, hide_index=True)
-        st.download_button("⬇️ Download hasil (CSV)", res.to_csv(index=False),
-                           "hasil_eksplorasi.csv", "text/csv")
+                   .reset_index(name="dropout_pct"))
+        else:
+            res = g[need].mean().round(2).reset_index(name=f"rata_{need}")
+        if res is not None:
+            table(res)
+            st.download_button("⬇️ Download hasil (CSV)",
+                               res.to_csv(index=False),
+                               "hasil_eksplorasi.csv", "text/csv")
 
     st.divider()
     sec("🗃️", "Pratinjau data mentah", C_TEAL)
     pv1, pv2 = st.columns(2)
     with pv1:
         st.markdown("**pendaftar** (100 baris pertama)")
-        st.dataframe(pend.head(100), use_container_width=True, height=300,
-                     hide_index=True)
+        table(pend.head(100), height=300)
     with pv2:
         st.markdown("**mahasiswa** (100 baris pertama)")
-        st.dataframe(mhs.head(100), use_container_width=True, height=300,
-                     hide_index=True)
+        table(mhs.head(100), height=300)
 
     penjelasan("Tentang dataset ini", """
-Dataset terdiri dari **2 tabel relasional**:
+Dataset terdiri dari **3 tabel relasional**:
 
 - `pendaftar` (±17,9 ribu baris): satu baris = satu pendaftar PMB.
   Memuat jalur masuk, pilihan prodi, demografi, nilai rapor/ujian,
   dan status tiap tahap funnel (lulus → daftar ulang).
 - `mahasiswa` (±6,3 ribu baris): subset yang daftar ulang — memuat
   NIM, prodi final, beasiswa KIP, IPK, dan status akademik.
+- `khs` (±27 ribu baris): IP per semester tiap mahasiswa — data
+  longitudinal untuk analisis trajektori akademik.
 
-**Relasi:** `mahasiswa.id_pendaftar → pendaftar.id_pendaftar` (one-to-one,
-karena setiap mahasiswa lahir dari satu pendaftar).
+**Relasi:** `mahasiswa.id_pendaftar → pendaftar.id_pendaftar` (one-to-one),
+`khs.nim → mahasiswa.nim` (many-to-one).
 
 **Sumber:** data **sintetis** yang digenerate programatik
 (`src/generate_data.py`, seed=42) menggunakan struktur prodi riil Polindra
 (polindra.ac.id), proporsi demografi wilayah Ciayumajakuning (BPS), dan
 mekanisme seleksi per-kuota-jalur yang meniru kebijakan nyata: SNMPN/SBMPN
-era 2019–2023 → SNBP/SNBT era 2024–2025 (transisi SNPMB).
-Detail per kolom: `docs/DATA_DICTIONARY.md`. Daftar sumber: `docs/SUMBER_DATA.md`.
+(2019–2023) → SNBP/SNBT (2024–2025) sesuai Permendikbudristek 48/2022.
 """)
-
-st.markdown("---")
-st.caption("🎓 PMB Polindra Analytics · dataset sintetis untuk portofolio · "
-           "Streamlit + Plotly")
