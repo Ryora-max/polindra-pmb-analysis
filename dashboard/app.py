@@ -468,12 +468,12 @@ with tab3:
     km = km[km["kota"].isin(KOORD)].copy()
     km["lat"] = km["kota"].map(lambda k: KOORD[k][0])
     km["lon"] = km["kota"].map(lambda k: KOORD[k][1])
-    fig = px.scatter_mapbox(km, lat="lat", lon="lon", size="n", color="n",
-                            hover_name="kota", size_max=38, zoom=7.2,
-                            center=dict(lat=-6.72, lon=108.28),
-                            mapbox_style="open-street-map",
-                            color_continuous_scale="Turbo",
-                            labels={"n": "Mahasiswa"})
+    fig = px.scatter_map(km, lat="lat", lon="lon", size="n", color="n",
+                         hover_name="kota", size_max=38, zoom=7.2,
+                         center=dict(lat=-6.72, lon=108.28),
+                         map_style="open-street-map",
+                         color_continuous_scale="Turbo",
+                         labels={"n": "Mahasiswa"})
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=430,
                       coloraxis_showscale=False)
     st.plotly_chart(fig, use_container_width=True)
