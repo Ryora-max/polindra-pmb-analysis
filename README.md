@@ -84,23 +84,30 @@ notebooks/01_analisis_pmb_polindra.ipynb
 
 ## Temuan Utama (fakta → implikasi)
 
-- **Demand naik ~170%** dalam 6 tahun, dipicu pembukaan prodi S1 Terapan
-  (2022+) → daya tampung belum mengejar; **keketatan turun dari ~58% ke ~32%**
-  — masalah utama bukan lagi "kurang peminat" tapi *over-subscription*.
-- **Prodi Teknik Informatika & Kesehatan paling diminati** dengan tingkat
-  diterima terendah → kandidat kuat untuk ekspansi kuota/prodi baru.
-- **Jalur Mandiri: leakage daftar ulang ~22%** (lulus tapi tak registrasi) →
-  *low-hanging fruit*: follow-up aktif pendaftar lulus-mandiri lebih murah
-  daripada menambah pendaftar baru.
-- **SNMPN menghasilkan IPK tertinggi; efek jalur masuk signifikan
-  (ANOVA p<0.001) tapi Cohen's d kecil** → nilai rapor prediktor baik,
-  namun seleksi bukan satu-satunya penentu performa.
-- **Dropout terlihat dari IP semester 1** (trajektori menurun sejak awal,
-  fitur terkuat model RF, AUC 0.65) → sistem *early-warning* layak:
-  flag mahasiswa IP sem-1 <2.5 untuk pembinaan dini.
-- **Polindra sangat lokal** (Indramayu+Ciayumajakuning dominan) →
-  konsentrasi geografis = risiko demografis; ekspansi brand ke luar
-  kawasan adalah tuas pertumbuhan berikutnya.
+> Seluruh angka dihitung otomatis (`python src/key_metrics.py` →
+> `outputs/key_metrics.md`). Data sintetis: hubungan antar variabel adalah
+> asumsi pemodelan; yang ditunjukkan adalah kemampuan analisis
+> mengkuantifikasinya secara jujur.
+
+- **Pendaftar +171% (1.400→3.800), kursi lulus hanya +50% (808→1.214, datar
+  sejak 2023)** → keketatan turun dari 57,7% ke 31,9%; masalahnya
+  *over-subscription*, bukan kurang peminat.
+- **D3 Keperawatan (885) & D3 Teknik Informatika (775) peminat terbanyak**
+  dengan tingkat diterima 33% & 30% → kandidat ekspansi kuota.
+- **Jalur Mandiri: yield 77,4% vs 88–89% jalur lain** (leakage 22,6%) →
+  follow-up aktif pasca-pengumuman lebih murah daripada menambah pendaftar.
+- **Jalur masuk signifikan memengaruhi IPK, tetapi efeknya sangat kecil**
+  (ANOVA p=1,5e-14, η²=0,012 — hanya ±1% variasi) → *signifikan ≠ penting*.
+- **65% mahasiswa DO berhenti dalam 2 semester pertama; IP semester 1
+  prediktor terkuat** (OR 0,22 per +1 poin; RF ROC-AUC 0,62 ± 0,02, 5-fold
+  CV) → aturan flag **IP sem-1 < 3,0**: ±19% mahasiswa ter-flag, ±33% calon DO
+  tertangkap (lift 1,7×). Ambang 2,5 terlalu ketat (recall 5%). Sinyal
+  moderat — untuk memprioritaskan pembinaan, bukan memvonis individu.
+- **TikTok/IG: volume terbesar (5.949) tapi konversi terendah (32,5% vs
+  37,9% Alumni/Keluarga)** → ukur *cost per mahasiswa terdaftar*.
+- **Polindra sangat lokal** (Kab. Indramayu 34,4%; Ciayumajakuning 68%) →
+  konsentrasi geografis = risiko demografis; ekspansi di luar kawasan
+  adalah tuas pertumbuhan berikutnya.
 
 ## Pendekatan analitis (apa yang ditunjukkan project ini)
 

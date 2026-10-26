@@ -52,7 +52,7 @@
 ## Analisis pola jaringan
 
 ### Profil kuantitatif
-- ~16 mitra terverifikasi ✅, ~7 klaim lemah, 5 kategori jaringan
+- Di tabel mitra: **11 entri ✅ terverifikasi, 6 🟡 klaim satu pihak** (dihitung dari tabel di atas; belum termasuk program pemerintah/Kemdikbud), 5 kategori jaringan
 - Jangkar ganda: Pemkab (legal-struktural) + Pertamina/industri Ciayumajakuning (ekonomis)
 
 ### Temuan analitis
