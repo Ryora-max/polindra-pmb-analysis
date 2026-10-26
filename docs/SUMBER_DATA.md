@@ -57,3 +57,8 @@ riil dari sumber-sumber berikut.
   adalah hasil simulasi yang dikalibrasi agar *plausible* terhadap sumber di atas.
 - Data riil mahasiswa per prodi tersedia di PDDikti (pddikti.kemdiktisaintek.go.id)
   tetapi memerlukan akses interaktif (Cloudflare) — tidak bisa di-scrape otomatis.
+
+## Lihat juga
+
+- `docs/PROFIL_POLINDRA.md` — timeline lengkap 2008-2026, mitra, angka riil
+  kalibrasi (maba, daya tampung, UKT), prestasi terverifikasi.
