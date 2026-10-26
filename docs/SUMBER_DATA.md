@@ -62,3 +62,6 @@ riil dari sumber-sumber berikut.
 
 - `docs/PROFIL_POLINDRA.md` — timeline lengkap 2008-2026, mitra, angka riil
   kalibrasi (maba, daya tampung, UKT), prestasi terverifikasi.
+
+- `docs/MITRA_POLINDRA.md` — peta mitra eksternal: industri, Taiwan,
+  pemerintah, program Kemdikbud + analisis pola jaringan.
