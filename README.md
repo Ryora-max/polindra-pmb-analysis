@@ -1,5 +1,11 @@
 # Analisis Penerimaan Mahasiswa Baru — Politeknik Negeri Indramayu
 
+![Python](https://img.shields.io/badge/Python-3.12-2563EB)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B)
+![pandas](https://img.shields.io/badge/pandas-EDA-150458)
+![scikit--learn](https://img.shields.io/badge/scikit--learn-Modeling-F7931E)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 Portfolio project **data analyst end-to-end**: simulasi funnel penerimaan mahasiswa baru (PMB)
 Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa akademik.
 
