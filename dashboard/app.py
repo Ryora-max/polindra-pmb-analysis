@@ -35,100 +35,113 @@ JURUSAN_COLOR = {"Teknik Informatika": "#1E40AF", "Teknik": "#0E7490",
 
 st.markdown("""
 <style>
-    .block-container {padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1280px;}
-    [data-testid="stSidebar"] {background: #F8FAFC;}
-    [data-testid="stSidebar"] * {color: #334155 !important;}
-    [data-testid="stSidebar"] .stMultiSelect label {font-weight: 600;}
+    .block-container {padding-top:1.2rem; padding-bottom:2.5rem; max-width:1320px;}
+    [data-testid="stAppViewContainer"] {background:#F5F7FB;}
+    [data-testid="stSidebar"] {background:#FFFFFF; border-right:1px solid #E8ECF2;}
+    [data-testid="stSidebar"] * {color:#334155 !important;}
+    [data-testid="stSidebar"] .stMultiSelect label {font-weight:600;}
 
-    /* ---------- Header ---------- */
+    /* ---------- Hero: soft gradient + chips ---------- */
     .hero {
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-left: 5px solid #2563EB;
-        border-radius: 12px;
-        padding: 1.4rem 1.6rem;
-        margin: 0 0 1.4rem 0;
-        color: #1F2937;
+        position:relative; overflow:hidden;
+        background:linear-gradient(115deg,#FFFFFF 42%,#EDF3FF 100%);
+        border:1px solid #E6EAF2; border-radius:18px;
+        padding:1.5rem 1.7rem 1.35rem; margin:0 0 1.35rem;
+        box-shadow:0 4px 18px rgba(15,23,42,.05);
     }
-    .hero h1 {margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing:.2px;}
-    .hero p  {margin: .35rem 0 0 0; font-size: .95rem; color: #64748B;}
+    .hero::after {content:""; position:absolute; right:-70px; top:-90px;
+        width:260px; height:260px; border-radius:50%;
+        background:radial-gradient(circle,rgba(37,99,235,.14) 0%,transparent 70%);}
+    .hero .eyebrow {font-size:.7rem; font-weight:800; letter-spacing:1.6px;
+        text-transform:uppercase; color:#2563EB; margin-bottom:.35rem;}
+    .hero h1 {margin:0; font-size:1.6rem; font-weight:800;
+        letter-spacing:-.3px; color:#0F172A;}
+    .hero p {margin:.45rem 0 .75rem; font-size:.92rem; color:#5B6B83;
+        max-width:60rem;}
+    .hero .chip {display:inline-block; font-size:.71rem; font-weight:600;
+        background:rgba(255,255,255,.8); border:1px solid #E2E8F0;
+        border-radius:999px; padding:.22rem .7rem; margin:0 .4rem .1rem 0;
+        color:#475569;}
+    .hero .chip b {color:#0F172A;}
 
-    /* ---------- KPI cards: grid responsif ---------- */
-    .kpi-grid {
-        display: grid; gap: .9rem; margin-bottom: .4rem;
-        grid-template-columns: repeat(5, 1fr);
-    }
-    .kpi {
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-top: 3px solid #2563EB;
-        border-radius: 10px;
-        padding: 1rem 1.1rem .9rem 1.1rem;
-        min-width: 0;
-    }
-    .kpi .label {font-size: .74rem; font-weight: 700; color:#64748B;
-                 text-transform: uppercase; letter-spacing: .6px;}
-    .kpi .value {font-size: 1.7rem; font-weight: 800; color:#111827;
-                 line-height: 1.15; word-break: break-word;}
-    .kpi .sub   {font-size: .78rem; color:#94A3B8; margin-top: .15rem;}
+    /* ---------- KPI cards ---------- */
+    .kpi-grid {display:grid; gap:.9rem; margin-bottom:.5rem;
+        grid-template-columns:repeat(5,1fr);}
+    .kpi {background:#FFFFFF; border:1px solid #E8ECF2; border-radius:14px;
+        padding:.95rem 1.05rem .85rem; min-width:0; position:relative;
+        overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.05);
+        transition:transform .16s ease, box-shadow .16s ease;}
+    .kpi:hover {transform:translateY(-3px);
+        box-shadow:0 8px 20px rgba(15,23,42,.09);}
+    .kpi::before {content:""; position:absolute; top:0; left:0; right:0;
+        height:3px; background:linear-gradient(90deg,#2563EB,#2563EB55);}
+    .kpi .top {display:flex; align-items:center; gap:.45rem;}
+    .kpi .icon {font-size:.95rem;}
+    .kpi .label {font-size:.72rem; font-weight:700; color:#64748B;
+        text-transform:uppercase; letter-spacing:.5px;}
+    .kpi .value {font-size:1.7rem; font-weight:800; color:#0F172A;
+        line-height:1.15; margin:.3rem 0 .1rem; word-break:break-word;}
+    .kpi .sub {font-size:.76rem; color:#94A3B8;}
 
-    /* ---------- Section pills & insight boxes ---------- */
-    .sec-pill {
-        display:inline-block; font-size:1.02rem; font-weight:800;
-        color:#1F2937; margin:.6rem 0 .3rem 0;
-        padding-bottom:.2rem; border-bottom:2px solid #E5E7EB;
-    }
-    .sec-pill::before {content:"●"; margin-right:.45rem; font-size:.85rem;}
-    .insight {
-        border-radius: 0 10px 10px 0;
-        padding: .8rem 1rem;
-        font-size: .88rem;
-        margin: .6rem 0;
-        background: #F8FAFC;
-        border: 1px solid #E5E7EB;
-        border-left: 3px solid;
-        color: #334155;
-    }
-    .insight.blue  {border-left-color:#2563EB;}
-    .insight.green {border-left-color:#16A34A;}
-    .insight.amber {border-left-color:#D97706;}
-    .insight b {color:#111827; font-weight:700;}
+    /* ---------- Section pill ---------- */
+    .sec-pill {display:inline-flex; align-items:center; gap:.45rem;
+        font-size:.78rem; font-weight:800; letter-spacing:.6px;
+        text-transform:uppercase; color:#475569;
+        background:#FFFFFF; border:1px solid #E8ECF2;
+        padding:.32rem .85rem; border-radius:999px; margin:.8rem 0 .45rem;
+        box-shadow:0 1px 2px rgba(15,23,42,.04);}
+    .sec-pill .dot {width:8px; height:8px; border-radius:50%;
+        background:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,.15);}
 
-    /* ---------- Tabs ---------- */
-    .stTabs [data-baseweb="tab-list"] {gap: .4rem; border-bottom:1px solid #E5E7EB;}
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        padding: .45rem .9rem; font-weight: 600; color: #64748B;
-        border-bottom: 2px solid transparent;
-    }
-    .stTabs [aria-selected="true"] {
-        background: transparent !important;
-        color: #2563EB !important;
-        border-bottom: 2px solid #2563EB !important;
-    }
+    /* ---------- Insight tinted ---------- */
+    .insight {border-radius:12px; padding:.85rem 1.05rem; font-size:.88rem;
+        margin:.65rem 0; border:1px solid; line-height:1.55;}
+    .insight.blue {background:#EFF6FF; border-color:#BFDBFE; color:#1E3A8A;}
+    .insight.green {background:#F0FDF4; border-color:#BBF7D0; color:#14532D;}
+    .insight.amber {background:#FFFBEB; border-color:#FDE68A; color:#78350F;}
+    .insight.red {background:#FEF2F2; border-color:#FECACA; color:#7F1D1D;}
 
-    [data-testid="stExpander"] {background: #FFFFFF; border-radius: 10px;
-        border: 1px solid #E5E7EB;}
-    [data-testid="stDataFrame"] {border-radius: 10px; overflow:hidden;
-        border:1px solid #E5E7EB;}
-    [data-testid="stMetric"] {background:#FFFFFF;border:1px solid #E5E7EB;
-        border-radius:10px;padding:.6rem .9rem;}
+    /* ---------- Tabs: segmented control ---------- */
+    .stTabs [data-baseweb="tab-list"] {gap:.35rem; border-bottom:none;
+        background:#FFFFFF; padding:.35rem; border-radius:14px;
+        border:1px solid #E8ECF2; width:fit-content; max-width:100%;
+        box-shadow:0 1px 3px rgba(15,23,42,.04);}
+    .stTabs [data-baseweb="tab"] {border-radius:10px; padding:.5rem 1rem;
+        font-weight:600; font-size:.9rem; color:#64748B; border:none;}
+    .stTabs [aria-selected="true"] {background:#2563EB !important;
+        color:#FFFFFF !important;}
+    .stTabs [data-baseweb="tab-highlight"] {display:none;}
 
-    /* ---------- Responsive: tablet & mobile ---------- */
-    @media (max-width: 1000px) {
-        .kpi-grid {grid-template-columns: repeat(3, 1fr);}
+    [data-testid="stExpander"] {background:#FFFFFF; border-radius:12px;
+        border:1px solid #E8ECF2;}
+    [data-testid="stDataFrame"] {border-radius:12px; overflow:hidden;
+        border:1px solid #E8ECF2; background:#FFFFFF;}
+    [data-testid="stMetric"] {background:#FFFFFF; border:1px solid #E8ECF2;
+        border-radius:12px; padding:.6rem .9rem;}
+    div[data-testid="stSelectbox"] label {font-weight:600;}
+
+    /* ---------- Footer ---------- */
+    .footer {margin-top:2.2rem; padding-top:1rem;
+        border-top:1px solid #E6EAF2; font-size:.75rem; color:#94A3B8;
+        display:flex; justify-content:space-between; flex-wrap:wrap; gap:.4rem;}
+    .footer b {color:#64748B;}
+
+    /* ---------- Responsive ---------- */
+    @media (max-width:1000px) {
+        .kpi-grid {grid-template-columns:repeat(3,1fr);}
+        .stTabs [data-baseweb="tab"] {padding:.4rem .65rem; font-size:.82rem;}
     }
-    @media (max-width: 640px) {
-        .block-container {padding-left: .8rem; padding-right: .8rem;}
-        .kpi-grid {grid-template-columns: repeat(2, 1fr); gap: .6rem;}
-        .kpi {padding: .8rem .8rem .7rem;}
-        .kpi .value {font-size: 1.3rem;}
-        .hero {padding: 1rem 1.1rem;}
-        .hero h1 {font-size: 1.2rem;}
-        .hero p {font-size: .85rem;}
-        .sec-pill {font-size: .92rem;}
-        .stTabs [data-baseweb="tab"] {padding: .4rem .6rem; font-size: .85rem;}
-        .insight {font-size: .82rem; padding: .7rem .8rem;}
+    @media (max-width:640px) {
+        .block-container {padding-left:.8rem; padding-right:.8rem;}
+        .kpi-grid {grid-template-columns:repeat(2,1fr); gap:.6rem;}
+        .kpi {padding:.8rem .8rem .7rem;}
+        .kpi .value {font-size:1.3rem;}
+        .hero {padding:1.1rem 1.15rem;}
+        .hero h1 {font-size:1.25rem;}
+        .hero p {font-size:.85rem;}
+        .hero .chip {font-size:.66rem; padding:.18rem .55rem;}
+        .sec-pill {font-size:.7rem;}
+        .insight {font-size:.82rem; padding:.7rem .8rem;}
     }
 </style>
 """, unsafe_allow_html=True)
@@ -178,10 +191,9 @@ def insight_box(text, tone="blue"):
     st.markdown(f'<div class="insight {tone}">💡 {text}</div>',
                 unsafe_allow_html=True)
 
-def sec(icon, label, color):
+def sec(icon, label, color=None):
     st.markdown(
-        f'<div class="sec-pill" style="color:{color}">{icon} '
-        f'<span style="color:#1E2235">{label}</span></div>',
+        f'<div class="sec-pill"><span class="dot"></span>{icon} {label}</div>',
         unsafe_allow_html=True)
 
 def penjelasan(judul, isi_md):
@@ -276,8 +288,16 @@ def segmentasi_mahasiswa():
 # ------------------------------------------------------------------ #
 st.markdown("""
 <div class="hero">
+  <div class="eyebrow">Portfolio Project · Admissions Analytics</div>
   <h1>🎓 PMB Polindra Analytics</h1>
-  <p>Analisis funnel Penerimaan Mahasiswa Baru Politeknik Negeri Indramayu · 2019–2025</p>
+  <p>Analisis end-to-end funnel Penerimaan Mahasiswa Baru Politeknik Negeri
+     Indramayu — tren peminat, konversi jalur, demografi, early-warning
+     dropout, dan forecasting.</p>
+  <span class="chip"><b>17.900</b> pendaftar</span>
+  <span class="chip"><b>6.278</b> mahasiswa</span>
+  <span class="chip"><b>27.013</b> nilai KHS</span>
+  <span class="chip">📅 2019–2025</span>
+  <span class="chip">Dataset sintetis terkalibrasi</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -286,18 +306,24 @@ n_reg = (pend["daftar_ulang"] == "Ya").sum()
 n_do = (mhs["status_mahasiswa"] == "Drop Out").sum()
 
 kpis = [
-    ("Total Pendaftar", titik(n_pend), f"{len(tahun_pilih)} tahun pendaftaran"),
-    ("Lulus Seleksi", titik(n_lulus), f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar"),
-    ("Daftar Ulang", titik(n_reg), f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus"),
-    ("Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ","),
+    ("👥", "Total Pendaftar", titik(n_pend),
+     f"{len(tahun_pilih)} tahun pendaftaran"),
+    ("✅", "Lulus Seleksi", titik(n_lulus),
+     f"{100*n_lulus/max(n_pend,1):.1f}% dari pendaftar"),
+    ("📝", "Daftar Ulang", titik(n_reg),
+     f"{100*n_reg/max(n_lulus,1):.1f}% dari yang lulus"),
+    ("🎓", "Rata-rata IPK", f"{mhs['ipk'].mean():.2f}".replace(".", ","),
      "mahasiswa terfilter"),
-    ("Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
+    ("⚠️", "Dropout Rate", f"{100*n_do/max(len(mhs),1):.1f}%".replace(".", ","),
      f"{titik(n_do)} mahasiswa"),
 ]
 kpi_html = '<div class="kpi-grid">'
-for label, val, sub in kpis:
-    kpi_html += (f'<div class="kpi"><div class="label">{label}</div>'
-                 f'<div class="value">{val}</div><div class="sub">{sub}</div></div>')
+for icon, label, val, sub in kpis:
+    kpi_html += (f'<div class="kpi"><div class="top">'
+                 f'<span class="icon">{icon}</span>'
+                 f'<span class="label">{label}</span></div>'
+                 f'<div class="value">{val}</div>'
+                 f'<div class="sub">{sub}</div></div>')
 st.markdown(kpi_html + "</div>", unsafe_allow_html=True)
 
 st.write("")
@@ -920,3 +946,12 @@ Dataset terdiri dari **3 tabel relasional**:
 mekanisme seleksi per-kuota-jalur yang meniru kebijakan nyata: SNMPN/SBMPN
 (2019–2023) → SNBP/SNBT (2024–2025) sesuai Permendikbudristek 48/2022.
 """)
+
+# ------------------------------------------------------------------ #
+#  Footer                                                             #
+# ------------------------------------------------------------------ #
+st.markdown(
+    '<div class="footer"><span><b>PMB Polindra Analytics</b> — portfolio '
+    'project · dataset sintetis terkalibrasi konteks riil</span>'
+    '<span>Streamlit · Plotly · SQLite · scikit-learn</span></div>',
+    unsafe_allow_html=True)
