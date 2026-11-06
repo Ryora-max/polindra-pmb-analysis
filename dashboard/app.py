@@ -694,6 +694,23 @@ with tab4:
     polish(fig, legend=dict(orientation="h", y=1.15))
     chart(fig)
 
+    sec("⏱️", "Kapan mahasiswa dropout? — semester terakhir tercatat", C_AMBER)
+    _last_sem = khs_x.groupby("nim")["semester"].max().rename("sem_akhir")
+    _drop = (mhs[["nim", "status_mahasiswa"]].merge(_last_sem, on="nim",
+                                                  how="left")
+             .assign(sem_akhir=lambda d: d["sem_akhir"].fillna(0)))
+    _do_last = (_drop[_drop["status_mahasiswa"] == "Drop Out"]
+                .groupby("sem_akhir").size().reset_index(name="n"))
+    fig = px.bar(_do_last, x="sem_akhir", y="n",
+                 color_discrete_sequence=[C_RED],
+                 text="n",
+                 labels={"sem_akhir": "Semester terakhir tercatat "
+                        "(0 = putus sebelum KHS pertama)",
+                        "n": "Mahasiswa DO"})
+    fig.update_traces(textposition="outside")
+    polish(fig, showlegend=False)
+    chart(fig)
+
     penjelasan("Cara membaca bagian ini", """
 **Violin plot** = distribusi IPK penuh per jurusan. Lebar "biola" = seberapa
 banyak mahasiswa di rentang IPK itu; garis tengah = median; kotak = rentang
@@ -718,6 +735,11 @@ sinyalnya sudah kelihatan jauh sebelumnya. Inilah dasar sistem early-warning.
 Dihitung dari data: flag IP semester 1 < 3,0 menandai ±19% mahasiswa dan
 menangkap ±33% calon DO (lift ±1,7× dibanding acak). Ambang < 2,5 terlalu
 ketat — hanya menangkap ±5% DO. Sinyal ini *moderat*, bukan deterministik.
+
+**Kapan mahasiswa dropout** menghitung semester terakhir di mana mahasiswa
+DO masih punya catatan KHS. Puncak di semester 1–2 berarti risiko terbesar
+ada di masa transisi SMA→PT — intervensi retensi paling efektif difokuskan
+di tahun pertama, bukan semester lanjut.
 
 ⚠️ **Caveat penting:** korelasi ≠ kausalitas. Dan pada data sintetis, pola
 ini sengaja dimodelkan — di data riil, kekuatan hubungannya bisa beda.

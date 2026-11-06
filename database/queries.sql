@@ -117,3 +117,44 @@ SELECT
 FROM mahasiswa
 GROUP BY jalur_masuk
 ORDER BY rata_ipk DESC;
+
+-- 11) Kapan mahasiswa dropout? — semester terakhir tercatat per status
+WITH last_sem AS (
+    SELECT nim, MAX(semester) AS sem_akhir
+    FROM khs
+    GROUP BY nim
+)
+SELECT m.status_mahasiswa,
+       COALESCE(l.sem_akhir, 0) AS semester_terakhir,
+       COUNT(*) AS n_mahasiswa
+FROM mahasiswa m
+LEFT JOIN last_sem l ON l.nim = m.nim
+GROUP BY m.status_mahasiswa, l.sem_akhir
+ORDER BY m.status_mahasiswa, semester_terakhir;
+
+-- 12) Beasiswa KIP: performa & dropout — apakah penerima KIP lebih rentan?
+SELECT beasiswa_kip,
+       COUNT(*) AS n_mahasiswa,
+       ROUND(AVG(ipk), 2) AS avg_ipk,
+       ROUND(100.0 * SUM(status_mahasiswa = 'Drop Out') / COUNT(*), 1) AS pct_do
+FROM mahasiswa
+GROUP BY beasiswa_kip
+ORDER BY beasiswa_kip;
+
+-- 13) Gender gap: peminat & rata-rata nilai rapor per jurusan
+SELECT jurusan, jenis_kelamin,
+       COUNT(*) AS n_pendaftar,
+       ROUND(AVG(nilai_rapor), 1) AS avg_rapor,
+       ROUND(100.0 * SUM(status_seleksi = 'Lulus') / COUNT(*), 1) AS pct_lulus
+FROM pendaftar
+GROUP BY jurusan, jenis_kelamin
+ORDER BY jurusan, jenis_kelamin;
+
+-- 14) Kualitas input vs outcome: nilai rapor & skor seleksi per status lulus
+SELECT status_seleksi, jalur_masuk,
+       COUNT(*) AS n,
+       ROUND(AVG(nilai_rapor), 1) AS avg_rapor,
+       ROUND(AVG(skor_seleksi), 1) AS avg_skor
+FROM pendaftar
+GROUP BY status_seleksi, jalur_masuk
+ORDER BY jalur_masuk, status_seleksi;

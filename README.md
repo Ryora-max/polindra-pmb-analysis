@@ -29,7 +29,7 @@ Polindra 2019–2025, dari pendaftaran → seleksi → registrasi → performa a
 ├── data/raw/              # Dataset CSV (pendaftar, mahasiswa, khs)
 ├── database/
 │   ├── polindra.db        # SQLite — 3 tabel relasional (pendaftar→mahasiswa→khs)
-│   └── queries.sql        # 10 query analisis (tren, funnel, retensi, kanal, trajektori)
+│   └── queries.sql        # 14 query analisis (tren, funnel, retensi, kanal, trajektori, cohort, gender, KIP)
 ├── notebooks/
 │   ├── 01_analisis_pmb_polindra.ipynb        # EDA lengkap + insight bisnis
 │   └── 02_statistik_dan_model_dropout.ipynb  # uji hipotesis + regresi logistik
